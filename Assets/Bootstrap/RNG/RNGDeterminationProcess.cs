@@ -10,7 +10,7 @@ public class RNGDeterminationProcess : IBootstrapProcess
         
         ulong WorldSeed = seedProvider.WorldSeed;
 
-        DefaultRNGProvider rngProvider = new DefaultRNGProvider(WorldSeed);
+        IRNGProvider rngProvider = new DefaultRNGProvider(WorldSeed);
         context.Register<IRNGProvider>(rngProvider);
     }
 }

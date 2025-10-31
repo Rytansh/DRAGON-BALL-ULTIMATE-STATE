@@ -6,7 +6,7 @@ public class SeedGenProcess : IBootstrapProcess
 
     public void Initialise(WorldContext context)
     {
-        DebugSeedProvider seedProvider = new DebugSeedProvider();
+        ISeedProvider seedProvider = new DebugSeedProvider();
         context.Register<ISeedProvider>(seedProvider);
     }
 }

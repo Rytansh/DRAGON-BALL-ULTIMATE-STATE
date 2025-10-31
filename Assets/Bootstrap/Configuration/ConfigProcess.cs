@@ -6,10 +6,10 @@ public class ConfigProcess : IBootstrapProcess
 
     public void Initialise(WorldContext context)
     {
-        ConfigRegistry configRegistry = new ConfigRegistry();
+        IConfigRegistry configRegistry = new ConfigRegistry();
         context.Register<IConfigRegistry>(configRegistry);
         
-        DefaultConfigProvider configProvider = new DefaultConfigProvider();
+        IConfigProvider configProvider = new DefaultConfigProvider();
         configProvider.LoadConfigurations(context);
         context.Register<IConfigProvider>(configProvider);
     }
