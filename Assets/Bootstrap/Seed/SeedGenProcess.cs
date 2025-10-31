@@ -8,5 +8,6 @@ public class SeedGenProcess : IBootstrapProcess
     {
         ISeedProvider seedProvider = new DebugSeedProvider();
         context.Register<ISeedProvider>(seedProvider);
+        Logging.System($"World seed generated: {seedProvider.WorldSeed}");
     }
 }
