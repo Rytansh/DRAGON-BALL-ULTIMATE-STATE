@@ -6,11 +6,9 @@ public class RNGDeterminationProcess : IBootstrapProcess
 
     public void Initialise(WorldContext context)
     {
-        ISeedProvider seedProvider = context.Resolve<ISeedProvider>();
-        
-        ulong WorldSeed = seedProvider.WorldSeed;
+        ISeedService seedService = context.Resolve<ISeedService>();
 
-        IRNGProvider rngProvider = new DefaultRNGProvider(WorldSeed);
+        IRNGProvider rngProvider = new DefaultRNGProvider(seedService);
         context.Register<IRNGProvider>(rngProvider);
     }
 }

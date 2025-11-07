@@ -24,7 +24,7 @@ public class RunBootstrap : MonoBehaviour
             bootstrapEntry.Initialise();
             Logging.System("[Bootstrap Runner] BattleBootstrap completed successfully!");
         }
-        catch (System.Exception ex)
+        catch (System.Exception)
         {
             Logging.Error("[Bootstrap Runner] BattleBootstrap failed!");
         }

@@ -1,8 +1,23 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class DefaultRNGProvider : IRNGProvider
 {
-    public DeterministicRNG rng { get; private set; }
+    private readonly ISeedService seedService;
+    private readonly Dictionary<string, DeterministicRNG> streams = new();
 
-    public DefaultRNGProvider(ulong seed) => rng = new DeterministicRNG(seed);
+    public DefaultRNGProvider(ISeedService seedService)
+    {
+        this.seedService = seedService;
+    }
+
+    public DeterministicRNG GetRNG(string key, ulong salt = 0)
+    {
+        if (streams.TryGetValue(key, out var rng))
+            return rng;
+
+        rng = seedService.CreateRNG(key, salt);
+        streams[key] = rng;
+        return rng;
+    }
 }

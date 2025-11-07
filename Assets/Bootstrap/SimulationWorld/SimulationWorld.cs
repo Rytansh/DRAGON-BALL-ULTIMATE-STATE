@@ -14,10 +14,10 @@ public sealed class SimulationWorld
     {
         localContext = new WorldContext();
 
-        ISeedProvider rootSeedProvider = rootContext.Resolve<ISeedProvider>();
-        DefaultRNGProvider localRNG = new DefaultRNGProvider(rootSeedProvider.WorldSeed);
+        ISeedService rootSeedService = rootContext.Resolve<ISeedService>();
+        IRNGProvider localRNG = new DefaultRNGProvider(rootSeedService);
 
-        localContext.Register<ISeedProvider>(rootSeedProvider);
+        localContext.Register<ISeedService>(rootSeedService);
         localContext.Register<IRNGProvider>(localRNG);
 
         Logging.System("SimulationWorld context created.");

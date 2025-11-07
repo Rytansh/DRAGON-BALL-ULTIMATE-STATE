@@ -20,6 +20,7 @@ public sealed class BattleBootstrapEntry
         orchestrator.Register(new ConfigProcess());
         orchestrator.Register(new SeedGenProcess());
         orchestrator.Register(new RNGDeterminationProcess());
+        orchestrator.Register(new RNGTestProcess());
         orchestrator.Register(new SimulationWorldProcess());
         orchestrator.Register(new PresentationWorldProcess());
         orchestrator.Register(new EventBusProcess());
