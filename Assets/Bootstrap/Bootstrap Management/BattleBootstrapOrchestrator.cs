@@ -15,30 +15,31 @@ public sealed class BattleBootstrapOrchestrator
     {
         List<IBootstrapProcess> ordered = processInitialisers.OrderBy(p => p.Order).ToList();
         Logging.System($"[Bootstrap] Starting initialisation of {ordered.Count} processes...");
-
+        var bootstrapTime = Stopwatch.StartNew();
         foreach (var process in ordered)
         {
             string processName = process.GetType().Name;
-            var stopwatch = Stopwatch.StartNew();
+            var processTimer = Stopwatch.StartNew();
             try
             {
                 Logging.System($"[Bootstrap] → Initialising: {processName}...");
                 process.Initialise(context);
-                stopwatch.Stop();
+                processTimer.Stop();
 
-                Logging.System($"[Bootstrap] ✓ {processName} initialised successfully ({stopwatch.ElapsedMilliseconds} ms).");
+                Logging.System($"[Bootstrap] ✓ {processName} initialised successfully ({processTimer.ElapsedMilliseconds} ms).");
             }
             catch (Exception ex)
             {
-                stopwatch.Stop();
-                Logging.Error($"[Bootstrap] ✗ Failed to initialise {processName} ({stopwatch.ElapsedMilliseconds} ms). Exception: {ex.Message}");
+                processTimer.Stop();
+                Logging.Error($"[Bootstrap] ✗ Failed to initialise {processName} ({processTimer.ElapsedMilliseconds} ms). Exception: {ex.Message}");
                 UnityEngine.Debug.Log(ex);
 
                 // Optionally: decide whether to continue or abort bootstrapping
                 // For now, continue — but in production, you might check for critical processes
             }
         }
-        Logging.System("[Bootstrap] All processes attempted. Bootstrapping complete.");
+        bootstrapTime.Stop();
+        Logging.System($"[Bootstrap] All processes attempted. Bootstrapping complete ({bootstrapTime.ElapsedMilliseconds} ms).");
     }
 }
 

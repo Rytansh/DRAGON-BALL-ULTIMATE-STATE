@@ -3,6 +3,7 @@ using UnityEngine;
 public class RNGTestProcess : IBootstrapProcess
 {
     public int Order => BootstrapOrderSequence.RNGTests;
+    private string testSeedString = "Battle_Test";
 
     public void Initialise(WorldContext context)
     {
@@ -12,13 +13,23 @@ public class RNGTestProcess : IBootstrapProcess
         IRNGProvider rngProvider = context.Resolve<IRNGProvider>();
 
         ulong worldSeed = seedService.WorldSeed;
-        ulong derivedBattleSeed = seedService.CreateDerivedSeed("Battle_Test");
-
         Logging.System($"WorldSeed = {worldSeed}");
-        Logging.System($"Derived Battle Seed = {derivedBattleSeed}");
 
-        // === Phase 1: In-run sequence determinism ===
-        Logging.System("[RNGTestProcess] Test 1 — In-run sequence consistency check...");
+        // === Test 1: Seed derivation determinism ===
+        Logging.System("[RNGTestProcess] Test 1 — Seed derivation determinism check...");
+
+        Logging.System($"Deriving battle seeds using the following string: {testSeedString}");
+        ulong derivedBattleSeed = seedService.CreateDerivedSeed(testSeedString);
+        ulong sameStringDerivedBattleSeed = seedService.CreateDerivedSeed(testSeedString);
+
+        if (derivedBattleSeed != sameStringDerivedBattleSeed)
+            Logging.Error($"[RNGTestProcess] ❌ Test 1 failed - Mismatch of derived seeds: {derivedBattleSeed} != {sameStringDerivedBattleSeed}");
+        else
+            Logging.System($"[RNGTestProcess] ✅ Test 1 passed — derived seeds are equal: {derivedBattleSeed} = {sameStringDerivedBattleSeed}");
+        
+
+        // === Test 2: In-run sequence determinism ===
+        Logging.System("[RNGTestProcess] Test 2 — In-run sequence consistency check...");
 
         var rngA = new DeterministicRNG(derivedBattleSeed);
         var rngB = new DeterministicRNG(derivedBattleSeed);
@@ -42,15 +53,15 @@ public class RNGTestProcess : IBootstrapProcess
         }
 
         if (match)
-            Logging.System("[RNGTestProcess] ✅ Test 1 passed — in-run RNG sequence deterministic.");
+            Logging.System("[RNGTestProcess] ✅ Test 2 passed — in-run RNG sequence deterministic.");
         else
-            Logging.Error("[RNGTestProcess] ❌ Test 1 failed — sequence diverged.");
+            Logging.Error("[RNGTestProcess] ❌ Test 2 failed — sequence diverged.");
 
-        // === Phase 2: Cross-run determinism (replay / reload check) ===
-        Logging.System("[RNGTestProcess] Test 2 — Cross-run consistency check...");
+        // === Test 3: Cross-run determinism (replay / reload check) ===
+        Logging.System("[RNGTestProcess] Test 3 — Cross-run consistency check...");
 
         var replayRng1 = new DeterministicRNG(derivedBattleSeed);
-        var replayRng2 = new DeterministicRNG(derivedBattleSeed);
+        var replayRng2 = new DeterministicRNG(sameStringDerivedBattleSeed);
 
         bool replayMatch = true;
         for (int i = 0; i < sampleCount; i++)
@@ -73,13 +84,13 @@ public class RNGTestProcess : IBootstrapProcess
         }
 
         if (replayMatch)
-            Logging.System("[RNGTestProcess] ✅ Test 2 passed — cross-run sequence deterministic.");
+            Logging.System("[RNGTestProcess] ✅ Test 3 passed — cross-run sequence deterministic.");
         else
-            Logging.Error("[RNGTestProcess] ❌ Phase 2 failed — replay sequence mismatch.");
+            Logging.Error("[RNGTestProcess] ❌ Test 3 failed — replay sequence mismatch.");
 
 
-        // === Phase 3: Mixed type sampling ===
-        Logging.System("[RNGTestProcess] Test 3 — Sampling various RNG types...");
+        // === Test 4: Mixed type sampling ===
+        Logging.System("[RNGTestProcess] Test 4 — Sampling various RNG types...");
 
         var rngSample = new DeterministicRNG(derivedBattleSeed);
         for (int i = 0; i < 5; i++)
