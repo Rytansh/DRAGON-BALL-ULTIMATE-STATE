@@ -1,7 +1,7 @@
 using UnityEngine;
 using DBUS.Gameplay.Stats;
 
-[CreateAssetMenu(fileName = "SkillDefinition", menuName = "Scriptable Objects/SkillDefinition")]
+[CreateAssetMenu(fileName = "SkillDefinition", menuName = "Card Definition/Skill")]
 public class SkillDefinition : ScriptableObject
 {
     public string ID;
@@ -11,8 +11,6 @@ public class SkillDefinition : ScriptableObject
     public SkillBaseStats SkillBaseStats;
     public int Duration;
     public string NormalAbilityID;
-    public string SpecialisedAbilityID;
-    public string SpecificAbilityID;
     public string DelayAndImprovementAbilityID;
 }
 

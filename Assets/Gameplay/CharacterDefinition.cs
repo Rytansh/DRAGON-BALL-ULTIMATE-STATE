@@ -1,7 +1,7 @@
 using DBUS.Gameplay.Stats;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "CharacterDefinition", menuName = "Card/Character")]
+[CreateAssetMenu(fileName = "CharacterDefinition", menuName = "Card Definition/Character")]
 public class CharacterDefinition : ScriptableObject
 {
     public string ID;   
