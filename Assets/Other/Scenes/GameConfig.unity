@@ -148,8 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f93d666734629774fb9509c09081a429, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SkillDefinitions:
-  - {fileID: 11400000, guid: cd0badd8a9677a4498bd39ae33b20da0, type: 2}
+  SkillDefinitions: []
 --- !u!4 &180922773
 Transform:
   m_ObjectHideFlags: 0
@@ -194,8 +193,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 72aed4e9110d3804e91d2c7fe1b856e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CharacterDefinitions:
-  - {fileID: 11400000, guid: 213645bbf57d9484baa74f00b1432823, type: 2}
+  CharacterDefinitions: []
 --- !u!4 &1839038739
 Transform:
   m_ObjectHideFlags: 0

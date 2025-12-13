@@ -13,7 +13,7 @@ public class SkillDefinition : ScriptableObject
     public string NormalAbilityID;
     public string DelayAndImprovementAbilityID;
 }
-
+[System.Serializable]
 public struct SkillBaseStats
 {
     public float ATK;

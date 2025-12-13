@@ -15,7 +15,7 @@ public class CharacterDefinition : ScriptableObject
     public string SuperchargedAttackID;  
     public string FinalTrumpSkillID;  
 }
-
+[System.Serializable]
 public struct CharacterBaseStats
 {
     public float HP;
