@@ -2,12 +2,16 @@ using UnityEngine;
 
 public sealed class BattleBootstrapEntry
 {
-    private readonly BattleBootstrapOrchestrator orchestrator;
+    private readonly BattleBootstrapOrchestrator sharedOrchestrator;
+    private readonly BattleBootstrapOrchestrator simulationOrchestrator;
+    private readonly BattleBootstrapOrchestrator presentationOrchestrator;
     private readonly WorldContext rootContext;
 
     public BattleBootstrapEntry()
     {
-        orchestrator = new BattleBootstrapOrchestrator();
+        sharedOrchestrator = new BattleBootstrapOrchestrator();
+        simulationOrchestrator = new BattleBootstrapOrchestrator();
+        presentationOrchestrator = new BattleBootstrapOrchestrator();
         rootContext = new WorldContext();
     }
 
@@ -16,17 +20,18 @@ public sealed class BattleBootstrapEntry
         Logging.System("=== Battle Bootstrap Started ===");
 
         // Register all processes (in any order)
-        orchestrator.Register(new LoggingProcess());
-        orchestrator.Register(new ConfigProcess());
-        orchestrator.Register(new SeedGenProcess());
-        orchestrator.Register(new RNGDeterminationProcess());
-        orchestrator.Register(new RNGTestProcess());
-        orchestrator.Register(new SimulationWorldProcess());
-        orchestrator.Register(new PresentationWorldProcess());
-        orchestrator.Register(new EventBusProcess());
+        sharedOrchestrator.Register(new LoggingProcess());
+        sharedOrchestrator.Register(new ConfigProcess());
+        sharedOrchestrator.Register(new SeedGenProcess());
+        sharedOrchestrator.Register(new RNGDeterminationProcess());
+        sharedOrchestrator.Register(new RNGTestProcess());
+        simulationOrchestrator.Register(new SimulationWorldProcess());
+        simulationOrchestrator.Register(new EventBusProcess());
+        presentationOrchestrator.Register(new PresentationWorldProcess());
 
-        // Initialise everything in order (using BootstrapOrderSequence)
-        orchestrator.InitialiseAll(rootContext);
+        sharedOrchestrator.InitialiseAll(rootContext);
+        simulationOrchestrator.InitialiseAll(rootContext);
+        presentationOrchestrator.InitialiseAll(rootContext);
 
         Logging.System("=== Battle Bootstrap Completed ===");
     }

@@ -15,12 +15,17 @@ public sealed class SimulationWorld
         localContext = new WorldContext();
 
         ISeedService rootSeedService = rootContext.Resolve<ISeedService>();
-        IRNGProvider localRNG = new DefaultRNGProvider(rootSeedService);
+        ulong localSeed = rootSeedService.CreateDerivedSeed("Battle");
+        SimulationRNGState RNGState = new SimulationRNGState {battleRNG = new DeterministicRNG(localSeed)};
 
-        localContext.Register<ISeedService>(rootSeedService);
-        localContext.Register<IRNGProvider>(localRNG);
+        localContext.Register<SimulationRNGState>(RNGState);
 
         Logging.System("SimulationWorld context created.");
+    }
+
+    public sealed class SimulationRNGState
+    {
+        public DeterministicRNG battleRNG;
     }
 
     public void Dispose()

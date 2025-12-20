@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class PresentationWorldProcess : IBootstrapProcess
 {
-    public int Order => BootstrapOrderSequence.PresentationWorld;
+    public int Order => PresentationBootstrapOrder.PresentationWorld;
 
     public void Initialise(WorldContext rootContext)
     {

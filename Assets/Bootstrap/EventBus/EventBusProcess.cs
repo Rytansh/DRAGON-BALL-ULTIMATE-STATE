@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class EventBusProcess : IBootstrapProcess
 {
-    public int Order => BootstrapOrderSequence.EventBus;
+    public int Order => SimulationBootstrapOrder.EventBus;
 
     public void Initialise(WorldContext rootContext)
     {

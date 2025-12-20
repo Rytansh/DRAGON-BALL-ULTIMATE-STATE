@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class ConfigProcess : IBootstrapProcess
 {
-    public int Order => BootstrapOrderSequence.Config;
+    public int Order => SimulationBootstrapOrder.Config;
 
     public void Initialise(WorldContext context)
     {

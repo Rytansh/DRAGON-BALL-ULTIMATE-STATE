@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class RNGTestProcess : IBootstrapProcess
 {
-    public int Order => BootstrapOrderSequence.RNGTests;
+    public int Order => SharedBootstrapOrder.RNGTests;
     private string testSeedString = "Battle_Test";
 
     public void Initialise(WorldContext context)

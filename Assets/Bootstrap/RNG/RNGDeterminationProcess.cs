@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class RNGDeterminationProcess : IBootstrapProcess
 {
-    public int Order => BootstrapOrderSequence.RNG;
+    public int Order => SharedBootstrapOrder.RNG;
 
     public void Initialise(WorldContext context)
     {

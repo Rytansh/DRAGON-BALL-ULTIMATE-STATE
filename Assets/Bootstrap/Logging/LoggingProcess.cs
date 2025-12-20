@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class LoggingProcess : IBootstrapProcess
 {
-    public int Order => BootstrapOrderSequence.Logging;
+    public int Order => SharedBootstrapOrder.Logging;
 
     public void Initialise(WorldContext context)
     {

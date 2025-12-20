@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class SeedGenProcess : IBootstrapProcess
 {
-    public int Order => BootstrapOrderSequence.Seeding;
+    public int Order => SharedBootstrapOrder.Seeding;
 
     public void Initialise(WorldContext context)
     {
