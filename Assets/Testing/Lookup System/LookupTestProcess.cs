@@ -15,7 +15,7 @@ public partial struct LookupTestProcess : ISystem
         ref var lookups = ref SystemAPI.GetSingletonRW<ContentLookupTables>().ValueRW;
         ref var registry = ref SystemAPI.GetSingleton<ContentBlobRegistryComponent>().BlobRegistryReference.Value;
 
-        uint testCharacterId = StableHash32.HashFromString("C1"); 
+        uint testCharacterId = StableHash32.HashFromString("C2"); 
 
         if (lookups.CharacterIDToIndex.TryGetValue(testCharacterId, out int index))
         {

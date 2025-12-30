@@ -22,7 +22,6 @@ public struct CharacterBlobBaseStats
     public float CritDMG;
     public float CritRATE;
     public float Reactivity;
-    public float PowerLEVEL;
     public float SustainPOWER;
     public float MagicalDMGBonus;
     public float PowerfulDMGBonus;
@@ -30,14 +29,4 @@ public struct CharacterBlobBaseStats
     public float FlexibleDMGBonus;
     public float DOTDMGBonus;
     public float ALLDMGBonus;
-}
-
-public struct CharacterDatabaseBlob
-{
-    public BlobArray<CharacterDefinitionBlob> Characters;
-}
-
-public struct CharacterDatabaseComponent : IComponentData
-{
-    public BlobAssetReference<CharacterDatabaseBlob> Blob;
 }

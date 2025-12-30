@@ -16,10 +16,9 @@ public static class CharacterDefinitionValidator
         ValidationTools.RequireNonNegative(validator, definition.CharacterBaseStats.ATK, "Character ATK");
         ValidationTools.RequireNonNegative(validator, definition.CharacterBaseStats.DEF, "Character DEF");
         ValidationTools.RequireInRange(validator, definition.CharacterBaseStats.CritRATE, 0, 100, "Crit Rate");
-        if(definition.CharacterBaseStats.CritRATE < 0) { validator.Error("Crit Rate out of acceptable bounds.");}
+        if(definition.CharacterBaseStats.CritRATE < 0) { validator.Warning("Crit Rate out of acceptable bounds.");}
         ValidationTools.RequireNonNegative(validator, definition.CharacterBaseStats.CritDMG, "Crit DMG");
         ValidationTools.RequireNonNegative(validator, definition.CharacterBaseStats.Reactivity, "Reactivity");
-        ValidationTools.RequireNonNegative(validator, definition.CharacterBaseStats.PowerLEVEL, "Power Level");
         ValidationTools.RequireNonNegative(validator, definition.CharacterBaseStats.SustainPOWER, "Sustain Power");
         ValidationTools.RequireNonNegative(validator, definition.CharacterBaseStats.MagicalDMGBonus, "Magical DMG Bonus");
         ValidationTools.RequireNonNegative(validator, definition.CharacterBaseStats.FlexibleDMGBonus, "Flexible DMG Bonus");

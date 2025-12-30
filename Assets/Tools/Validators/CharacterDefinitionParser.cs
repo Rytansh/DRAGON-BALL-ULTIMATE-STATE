@@ -11,16 +11,16 @@ public static class CharacterDefinitionParser
         {
             if (def == null)
             {
-                Logging.Error("Asset is null and will not be baked or considered.");
+                Logging.Warning("Asset is null and will not be baked or considered.");
                 continue;
             }
 
             var ctx = new ValidationContext(def);
             CharacterDefinitionValidator.Validate(def, ctx);
 
-            if (ctx.HasErrors)
+            if (ctx.HasWarnings)
             {
-                Logging.Error(def + " contains errors and will not be baked or considered.");
+                Logging.Warning(def + " contains errors and will not be baked or considered.");
                 continue;
             }
 

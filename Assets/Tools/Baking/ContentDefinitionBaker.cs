@@ -8,9 +8,10 @@ public class ContentDefinitionBaker : Baker<ContentDefinitionAuthoring>
 {
     public override void Bake(ContentDefinitionAuthoring authoring)
     {
-        Entity dbEntity = GetEntity(TransformUsageFlags.None);
+
         List<CharacterDefinition> validCharacterDefinitions = CharacterDefinitionParser.FilterValidCharacterDefinitions(authoring.CharacterDefinitions);
         List<SkillDefinition> validSkillDefinitions = SkillDefinitionParser.FilterValidSkillDefinitions(authoring.SkillDefinitions);
+        Entity ContentRegistryEntity = GetEntity(TransformUsageFlags.None);
 
         using (BlobBuilder builder = new BlobBuilder(Allocator.Temp))
         {
@@ -23,7 +24,7 @@ public class ContentDefinitionBaker : Baker<ContentDefinitionAuthoring>
 
             BlobAssetReference<ContentBlobRegistry> registryReference = builder.CreateBlobAssetReference<ContentBlobRegistry>(Allocator.Persistent);
             AddBlobAsset(ref registryReference, out Unity.Entities.Hash128 blobHash);
-            AddComponent(dbEntity, new ContentBlobRegistryComponent { BlobRegistryReference = registryReference });
+            AddComponent(ContentRegistryEntity, new ContentBlobRegistryComponent { BlobRegistryReference = registryReference });
         }
     }
     private static void BakeAllCharacters(List<CharacterDefinition> characterDefs, ref BlobBuilderArray<CharacterDefinitionBlob> outputArray)
@@ -61,7 +62,6 @@ public class ContentDefinitionBaker : Baker<ContentDefinitionAuthoring>
         stats.CritDMG = def.CharacterBaseStats.CritDMG;
         stats.CritRATE = def.CharacterBaseStats.CritRATE;
         stats.Reactivity = def.CharacterBaseStats.Reactivity;
-        stats.PowerLEVEL = def.CharacterBaseStats.PowerLEVEL;
         stats.SustainPOWER = def.CharacterBaseStats.SustainPOWER;
         stats.MagicalDMGBonus = def.CharacterBaseStats.MagicalDMGBonus;
         stats.PowerfulDMGBonus = def.CharacterBaseStats.PowerfulDMGBonus;

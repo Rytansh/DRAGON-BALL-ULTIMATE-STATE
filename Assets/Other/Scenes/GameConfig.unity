@@ -165,6 +165,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CharacterDefinitions:
   - {fileID: 11400000, guid: b146376f4fe0ad0409c41c3a06b00fda, type: 2}
+  - {fileID: 11400000, guid: 4e46faf70feae4b4a8f7b3363efcc6be, type: 2}
   SkillDefinitions:
   - {fileID: 11400000, guid: ba6999407fd80de449afb5d638368930, type: 2}
 --- !u!1660057539 &9223372036854775807

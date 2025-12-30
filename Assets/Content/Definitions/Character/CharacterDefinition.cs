@@ -24,7 +24,6 @@ public struct CharacterBaseStats
     public float CritDMG;
     public float CritRATE;
     public float Reactivity;
-    public float PowerLEVEL;
     public float SustainPOWER;
     public float MagicalDMGBonus;
     public float PowerfulDMGBonus;
