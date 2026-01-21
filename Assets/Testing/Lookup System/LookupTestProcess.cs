@@ -7,7 +7,7 @@ public partial struct LookupTestProcess : ISystem
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<ContentLookupTables>();
-        state.Enabled = true;
+        // state.Enabled = true; comment this whenever you want to disable the test process
     }
 
     public void OnUpdate(ref SystemState state)
@@ -15,7 +15,7 @@ public partial struct LookupTestProcess : ISystem
         ref var lookups = ref SystemAPI.GetSingletonRW<ContentLookupTables>().ValueRW;
         ref var registry = ref SystemAPI.GetSingleton<ContentBlobRegistryComponent>().BlobRegistryReference.Value;
 
-        uint testCharacterId = StableHash32.HashFromString("C2"); 
+        uint testCharacterId = StableHash32.HashFromString("C1"); 
 
         if (lookups.CharacterIDToIndex.TryGetValue(testCharacterId, out int index))
         {

@@ -2,8 +2,16 @@ using Unity.Entities;
 
 namespace DBUS.Core.Components.Turns
 {
-    public struct TurnStart : IComponentData {}
-    public struct TurnPlaying : IComponentData {}
-    public struct TurnEnd : IComponentData {}
-    
+    public enum TurnPhase : byte
+    {
+        Start,
+        Playing,
+        End
+    }
+
+    public struct TurnState : IComponentData
+    {
+        public TurnPhase Current;
+    }
+
 }

@@ -15,6 +15,12 @@ public static class CharacterDefinitionParser
                 continue;
             }
 
+            if (validDefs.Contains(def))
+            {
+                Logging.Warning(def + " already exists in the definition list and will not be baked or considered.");
+                continue;
+            }
+
             var ctx = new ValidationContext(def);
             CharacterDefinitionValidator.Validate(def, ctx);
 

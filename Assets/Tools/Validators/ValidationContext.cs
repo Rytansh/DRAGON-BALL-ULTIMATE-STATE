@@ -17,13 +17,13 @@ public sealed class ValidationContext
     public void Error(string message)
     {
         errorCount++;
-        Logging.Error($"[{asset.name}] {message}");
+        Logging.Warning($"ERROR: [{asset.name}] {message}");
     }
 
     public void Warning(string message)
     {
         warningCount++;
-        Logging.Warning($"[{asset.name}] {message}");
+        Logging.Warning($"WARNING: [{asset.name}] {message}");
     }
 }
 
