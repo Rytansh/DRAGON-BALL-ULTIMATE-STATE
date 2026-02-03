@@ -10,7 +10,8 @@ namespace DBUS.Core.Components.Determinism
     public enum BattlePhase : byte
     {
         Bootstrapping = 0,
-        Running      = 1,
-        Completed    = 2,
+        SetupComplete = 5,
+        Running      = 10,
+        Completed    = 20,
     }
 }

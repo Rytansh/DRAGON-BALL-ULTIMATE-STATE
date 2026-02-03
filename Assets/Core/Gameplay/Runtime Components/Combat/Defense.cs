@@ -2,7 +2,7 @@ using Unity.Entities;
 
 namespace DBUS.Core.Components.Combat
 {
-    public struct CurrentDEF: IComponentData
+    public struct CurrentDefense: IComponentData
     {
         public int Value;
     }
