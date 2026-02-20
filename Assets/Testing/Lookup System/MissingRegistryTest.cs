@@ -20,12 +20,12 @@ public partial struct MissingRegistryTest : ISystem
         if (lookups.CharacterIDToIndex.TryGetValue(invalidId, out int index))
         {
             Logging.Error(
-                $"[MissingContentTest] FAIL — Invalid ID resolved to index {index}");
+                $"[MissingContentTest] Fail — Invalid ID resolved to index {index}");
         }
         else
         {
             Logging.System(
-                "[MissingContentTest] PASSED — Invalid ID correctly rejected");
+                "[MissingContentTest] Pass - Invalid ID correctly rejected.");
         }
 
         state.Enabled = false;

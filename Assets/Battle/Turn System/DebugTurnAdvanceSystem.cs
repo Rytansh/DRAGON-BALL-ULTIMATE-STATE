@@ -4,28 +4,21 @@ using Unity.Collections;
 using DBUS.Core.Components.Turns;
 using DBUS.Core.Components.Requests;
 
-public partial struct DebugAdvanceTurnSystem : ISystem
+public partial struct DebugTurnAdvanceSystem : ISystem
 {
     public void OnUpdate(ref SystemState state)
     {
         if (!Input.GetKeyDown(KeyCode.Space))
             return;
 
-        EntityCommandBuffer ecb = new EntityCommandBuffer(Allocator.Temp);
-
-        foreach (var (turnState, battleEntity)
-                 in SystemAPI.Query<RefRO<TurnState>>()
-                              .WithAll<BattleTag>()
-                              .WithNone<AdvanceTurnRequest>()
-                              .WithEntityAccess())
+        foreach (var battleState
+                 in SystemAPI.Query<RefRW<BattleState>>())
         {
-            if (turnState.ValueRO.Current != TurnPhase.End)
+            if (battleState.ValueRO.Phase != BattlePhase.Drawing)
                 continue;
 
-            ecb.AddComponent<AdvanceTurnRequest>(battleEntity);
+            battleState.ValueRW.Phase = BattlePhase.TurnEnd;
         }
-
-        ecb.Playback(state.EntityManager);
-        ecb.Dispose();
     }
 }
+

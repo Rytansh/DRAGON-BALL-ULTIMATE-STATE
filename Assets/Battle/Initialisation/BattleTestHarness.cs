@@ -11,5 +11,6 @@ public class BattleTestHarness : MonoBehaviour
 
         var e = em.CreateEntity();
         em.AddComponentData(e, new StartBattleRequest());
+
     }
 }
