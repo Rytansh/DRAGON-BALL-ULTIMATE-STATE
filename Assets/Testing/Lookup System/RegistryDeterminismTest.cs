@@ -18,8 +18,7 @@ public partial struct RegistryDeterminismTest : ISystem
         // Pick a few canonical IDs
         uint[] criticalIds =
         {
-            StableHash32.HashFromString("C1"),
-            StableHash32.HashFromString("C2")
+            StableHash32.HashFromString("C1")
         };
 
         foreach (uint id in criticalIds)

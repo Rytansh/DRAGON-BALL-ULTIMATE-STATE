@@ -6,28 +6,27 @@ public partial struct BattleInitialisationSystem : ISystem
 {
     public void OnUpdate(ref SystemState state)
     {
-        EntityCommandBuffer ecb =
-            new EntityCommandBuffer(Allocator.Temp);
+        var ecb = new EntityCommandBuffer(Allocator.Temp);
 
-        foreach (var (battleState, entity)
-                 in SystemAPI.Query<RefRO<BattleState>>()
+        foreach (var (battleState, battle)
+                 in SystemAPI.Query<RefRW<BattleState>>()
                              .WithAll<BattleTag>()
-                             .WithNone<TurnCounter>()
-                             .WithNone<TurnState>()
-                             .WithNone<MaxActionPoints>()
-                             .WithNone<RemainingActionPoints>()
                              .WithEntityAccess())
         {
-            if (battleState.ValueRO.Current != BattlePhase.Running)
+            if (battleState.ValueRO.Phase != BattlePhase.Creating)
                 continue;
 
-            ecb.AddComponent(entity, new TurnCounter { CurrentTurn = 0 });
-            ecb.AddComponent(entity, new MaxActionPoints { Value = 4 });
-            ecb.AddComponent(entity, new RemainingActionPoints { Value = 2 });
-            ecb.AddComponent(entity, new TurnState { Current = TurnPhase.Start });
+            ecb.AddComponent(battle, new TurnCounter { CurrentTurn = 0 });
+
+            ecb.AddComponent(battle, new MaxActionPoints { Value = 4 });
+
+            ecb.AddComponent(battle, new RemainingActionPoints { Value = 4 });
+
+            battleState.ValueRW.Phase = BattlePhase.Initialising;
         }
 
         ecb.Playback(state.EntityManager);
         ecb.Dispose();
     }
 }
+

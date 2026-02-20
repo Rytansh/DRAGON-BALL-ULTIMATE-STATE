@@ -15,7 +15,8 @@ public partial struct CharacterSpawnSystem : ISystem
         {
             Entity character = ecb.CreateEntity();
 
-            ecb.AddComponent<Character>(character);
+            ecb.AddComponent(character, new Character{Battle = request.ValueRO.Battle});
+            ecb.AddComponent(character, new CharacterSlot{Value = request.ValueRO.Slot});
             ecb.AddComponent(character, new CharacterSlot{Value = request.ValueRO.Slot});
             ecb.AddComponent(character, new CurrentAttack{Value = request.ValueRO.Attack});
             ecb.AddComponent(character, new CurrentDefense{Value = request.ValueRO.Defense});
