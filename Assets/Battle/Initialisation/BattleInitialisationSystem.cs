@@ -1,7 +1,12 @@
 using Unity.Entities;
 using Unity.Collections;
-using DBUS.Core.Components.Determinism;
-using DBUS.Core.Components.Turns;
+using DBUS.Battle.Components.Determinism;
+using DBUS.Battle.Components.Turns;
+using DBUS.Battle.Components.Setup;
+using DBUS.Battle.Components.Ownership;
+using DBUS.Battle.Components.Combat;
+
+[UpdateInGroup(typeof(BattleInitialisationGroup))]
 public partial struct BattleInitialisationSystem : ISystem
 {
     public void OnUpdate(ref SystemState state)
@@ -9,20 +14,31 @@ public partial struct BattleInitialisationSystem : ISystem
         var ecb = new EntityCommandBuffer(Allocator.Temp);
 
         foreach (var (battleState, battle)
-                 in SystemAPI.Query<RefRW<BattleState>>()
-                             .WithAll<BattleTag>()
-                             .WithEntityAccess())
+         in SystemAPI.Query<RefRO<BattleState>>()
+                     .WithAll<BattleTag>()
+                     .WithNone<BattleInitialisationCompleteTag>()
+                     .WithEntityAccess())
         {
             if (battleState.ValueRO.Phase != BattlePhase.Creating)
                 continue;
 
             ecb.AddComponent(battle, new TurnCounter { CurrentTurn = 0 });
 
-            ecb.AddComponent(battle, new MaxActionPoints { Value = 4 });
+            foreach (var (ownedBattle, player)
+                    in SystemAPI.Query<RefRO<OwnedBattle>>()
+                                .WithAll<PlayerTag>()
+                                .WithEntityAccess())
+            {
+                if (ownedBattle.ValueRO.Battle != battle)
+                    continue;
 
-            ecb.AddComponent(battle, new RemainingActionPoints { Value = 4 });
+                ecb.AddComponent(player, new MaxActionPoints { Value = 4 });
+                ecb.AddComponent(player, new RemainingActionPoints { Value = 4 });
+                ecb.AddComponent(player, new PlayerHand { Current = 0 });
+                ecb.AddComponent(player, new MaxHandSize { Value = 4 });
+            }
 
-            battleState.ValueRW.Phase = BattlePhase.Initialising;
+            ecb.AddComponent<BattleInitialisationCompleteTag>(battle);
         }
 
         ecb.Playback(state.EntityManager);

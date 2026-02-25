@@ -1,6 +1,6 @@
 using UnityEngine;
 using Unity.Entities;
-using DBUS.Core.Components.Requests;
+using DBUS.Battle.Components.Requests;
 
 public class BattleTestHarness : MonoBehaviour
 {
@@ -8,7 +8,7 @@ public class BattleTestHarness : MonoBehaviour
     {
         var world = World.DefaultGameObjectInjectionWorld;
         var em = world.EntityManager;
-
+   
         var e = em.CreateEntity();
         em.AddComponentData(e, new StartBattleRequest());
 

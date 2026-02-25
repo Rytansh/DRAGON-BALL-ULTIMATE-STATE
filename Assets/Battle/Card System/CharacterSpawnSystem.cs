@@ -1,7 +1,7 @@
 using Unity.Entities;
 using Unity.Collections;
-using DBUS.Core.Components.Combat;
-using DBUS.Core.Components.Requests;
+using DBUS.Battle.Components.Combat;
+using DBUS.Battle.Components.Requests;
 public partial struct CharacterSpawnSystem : ISystem
 {
     public void OnUpdate(ref SystemState state)

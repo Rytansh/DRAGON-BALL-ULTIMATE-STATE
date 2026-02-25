@@ -4,9 +4,10 @@ using DBUS.Battle.Components.Turns;
 using DBUS.Battle.Components.Determinism;
 using DBUS.Battle.Components.Requests;
 using DBUS.Battle.Components.Ownership;
+using DBUS.Battle.Components.Combat;
 
-[UpdateInGroup(typeof(TurnEndGroup))]
-public partial struct TurnEndSystem : ISystem
+[UpdateInGroup(typeof(AttackingStageGroup))]
+public partial struct AttackingStageSystem : ISystem
 {
     public void OnUpdate(ref SystemState state)
     {
@@ -15,19 +16,18 @@ public partial struct TurnEndSystem : ISystem
                  in SystemAPI.Query<
                      RefRO<BattleState>>()
                     .WithAll<BattleTag>()
-                    .WithNone<BattleTurnEndCompleteTag>()
+                    .WithNone<BattleAttackingCompleteTag>()
                     .WithEntityAccess())
         {
-            if (battleState.ValueRO.Phase != BattlePhase.TurnEnd)
+            if (battleState.ValueRO.Phase != BattlePhase.Attacking)
                 continue;
 
-            ecb.AddComponent<BattleTurnEndCompleteTag>(battle);
-            Logging.System("[Battle] Ending turn.");
+            //perform all actions in planning queue here
+            ecb.AddComponent<BattleAttackingCompleteTag>(battle);
+            Logging.System("[Battle] Attacking stage complete.");
         }
 
         ecb.Playback(state.EntityManager);
         ecb.Dispose();
     }
 }
-
-
