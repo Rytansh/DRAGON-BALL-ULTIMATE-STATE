@@ -1,8 +1,8 @@
 using Unity.Entities;
 
-namespace DBUS.Battle.Components.Events
+namespace DBUS.Battle.VM.Data
 {
-    public struct RegisteredTrigger : IBufferElementData
+    public struct VMTrigger : IBufferElementData
     {
         public BattleEventType EventType;
         public int Priority;

@@ -13,6 +13,7 @@ namespace DBUS.Battle.Components.Determinism
         Initialising = 1,
         Spawning = 2,
 
+        WaitingForBattleReadySignal = 9,
         BattleReady = 10,
 
         TurnStart = 20,

@@ -2,6 +2,10 @@ using Unity.Entities;
 using Unity.Collections;
 using DBUS.Battle.Components.Combat;
 using DBUS.Battle.Components.Requests;
+using DBUS.Battle.Components.Ownership;
+
+[UpdateInGroup(typeof(BattleSetupGroup))]
+
 public partial struct CharacterSpawnSystem : ISystem
 {
     public void OnUpdate(ref SystemState state)
@@ -17,10 +21,12 @@ public partial struct CharacterSpawnSystem : ISystem
 
             ecb.AddComponent(character, new Character{Battle = request.ValueRO.Battle});
             ecb.AddComponent(character, new CharacterSlot{Value = request.ValueRO.Slot});
-            ecb.AddComponent(character, new CharacterSlot{Value = request.ValueRO.Slot});
-            ecb.AddComponent(character, new CurrentAttack{Value = request.ValueRO.Attack});
-            ecb.AddComponent(character, new CurrentDefense{Value = request.ValueRO.Defense});
-            ecb.AddComponent(character, new MaxHealth{Value = request.ValueRO.MaxHealth});
+            ecb.AddComponent(character, new CharacterStats
+            {
+                Attack = request.ValueRO.Attack,
+                Defense = request.ValueRO.Defense,
+                MaxHealth = request.ValueRO.MaxHealth
+            });
             ecb.AddComponent(character, new CurrentHealth{Value = request.ValueRO.MaxHealth});
 
             ecb.DestroyEntity(requestEntity);

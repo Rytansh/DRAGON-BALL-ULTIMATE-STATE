@@ -1,6 +1,6 @@
 using Unity.Entities;
 
-public struct BattleEvent
+public struct BattleEvent : IBufferElementData
 {
     public BattleEventType Type;
 

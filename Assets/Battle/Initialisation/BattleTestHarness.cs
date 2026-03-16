@@ -19,13 +19,5 @@ public class BattleTestHarness : MonoBehaviour
             BattleConfigID = 0
         });
 
-        var e2 = em.CreateEntity();
-        em.AddComponentData(e2, new StartBattleRequest
-        {
-            BattleID = 2,
-            BattleSeed = 123456UL,
-            BattleConfigID = 1
-        });
-
     }
 }

@@ -11,27 +11,18 @@ public partial struct BattleSpawnCompletionSystem : ISystem
 {
     public void OnUpdate(ref SystemState state)
     {
-        bool spawnRequestsExist =
-            SystemAPI.QueryBuilder()
-                    .WithAll<SpawnCharacterRequest>()
-                    .Build()
-                    .CalculateEntityCount() > 0;
-
-        if (spawnRequestsExist)
-            return;
+        bool spawnRequestsExist = SystemAPI.QueryBuilder().WithAll<SpawnCharacterRequest>().Build().CalculateEntityCount() > 0;
+        if (spawnRequestsExist) return;
 
         EntityCommandBuffer ecb = new EntityCommandBuffer(Allocator.Temp);
 
-        foreach (var (battleState, battle)
-                in SystemAPI.Query<RefRO<BattleState>>()
-                            .WithAll<BattleTag>()
-                            .WithNone<BattleSpawningCompleteTag>()
-                            .WithEntityAccess())
+        foreach (var (battleState, battle)in SystemAPI.Query<RefRO<BattleState>>().WithAll<BattleTag>().WithNone<BattleSpawningCompleteTag>().WithEntityAccess())
         {
             if (battleState.ValueRO.Phase != BattlePhase.Spawning)
                 continue;
 
             ecb.AddComponent<BattleSpawningCompleteTag>(battle);
+            ecb.AddComponent<BattleReadyTag>(battle);
 
             Logging.System("[Battle] Battle spawn requests resolved.");
         }

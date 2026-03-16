@@ -1,14 +1,15 @@
 using Unity.Entities;
 
-namespace DBUS.Battle.Components.Combat
+namespace DBUS.Battle.Components.Ownership
 {
     public struct Character: IComponentData
     {
         public Entity Battle;
     }
-    // holds whether an entity is a character.
 
-    public struct Skill: IComponentData{}
-    // holds whether an entity is a skill.
+    public struct Skill: IComponentData
+    {
+        public Entity Battle;
+    }
 }
 

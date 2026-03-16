@@ -1,5 +1,6 @@
 public enum BattleEventType : ushort
 {
+    TestEvent,
     //(Turn Related Events)
     TurnStarted,
     TurnEnded,
@@ -15,8 +16,8 @@ public enum BattleEventType : ushort
     ResourceChanged,
 
     //(Damage Related Events)
-    DamageCalculated,
-    DamageApplied,
+    DamageRequested,
+    DamageResolved,
 
     //(Status Related Events)
     BuffApplied,

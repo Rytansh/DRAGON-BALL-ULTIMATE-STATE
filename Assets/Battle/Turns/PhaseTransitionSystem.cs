@@ -40,10 +40,17 @@ public partial struct BattlePhaseTransitionSystem : ISystem
                     if (SystemAPI.HasComponent<BattleSpawningCompleteTag>(battle))
                     {
                         ecb.RemoveComponent<BattleSpawningCompleteTag>(battle);
-                        battleState.ValueRW.Phase = BattlePhase.BattleReady;
+                        battleState.ValueRW.Phase = BattlePhase.WaitingForBattleReadySignal;
                     }
                     break;
 
+                case BattlePhase.WaitingForBattleReadySignal:
+                    if (SystemAPI.HasComponent<BattleReadyTag>(battle))
+                    {
+                        ecb.RemoveComponent<BattleReadyTag>(battle);
+                        battleState.ValueRW.Phase = BattlePhase.BattleReady;
+                    }
+                    break;
                 case BattlePhase.BattleReady:
                     if (SystemAPI.HasComponent<BattleTurnStartTag>(battle))
                     {

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using Unity.Collections;
 using DBUS.Battle.Components.Events;
 
-public struct BehaviorExecutionComparer : IComparer<BehaviorExecutionRequest>
+public struct BehaviourExecutionComparer : IComparer<BehaviourExecutionRequest>
 {
-    public int Compare(BehaviorExecutionRequest a, BehaviorExecutionRequest b)
+    public int Compare(BehaviourExecutionRequest a, BehaviourExecutionRequest b)
     {
         int priorityCompare = b.Priority.CompareTo(a.Priority);
         if (priorityCompare != 0)

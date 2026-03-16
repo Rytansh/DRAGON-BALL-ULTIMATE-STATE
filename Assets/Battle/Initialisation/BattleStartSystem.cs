@@ -20,19 +20,6 @@ public partial struct BattleStartSystem : ISystem
             if (battleState.ValueRO.Phase != BattlePhase.BattleReady)
                 continue;
             
-            var buffer = state.EntityManager.GetBuffer<BattleEventBuffer>(battle);
-            buffer.Add(new BattleEventBuffer
-            {
-                Value = new BattleEvent
-                {
-                    Type = BattleEventType.TurnStarted,
-                    Source = battle,
-                    Target = battle
-                }
-            });
-
-            var triggerBuffer = SystemAPI.GetBuffer<RegisteredTrigger>(battle);
-
             ecb.AddComponent<BattleTurnStartTag>(battle);
 
             Logging.System("[Battle] Battle starting.");

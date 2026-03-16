@@ -37,19 +37,7 @@ public partial struct PlanningStageSystem : ISystem
                 ecb.DestroyEntity(requestEntity);
                 continue;
             }
-
-            var buffer = SystemAPI.GetBuffer<BattleEventBuffer>(battle);
-
-            buffer.Add(new BattleEventBuffer
-            {
-                Value = new BattleEvent
-                {
-                    Type = BattleEventType.CardPlaced,
-                    Source = player,
-                    Target = player
-                }
-            });
-
+            Logging.System("Card placed event fired.");
             ecb.DestroyEntity(requestEntity);
         }
     }
@@ -68,17 +56,7 @@ public partial struct PlanningStageSystem : ISystem
                 continue;
             }
 
-            var buffer = SystemAPI.GetBuffer<BattleEventBuffer>(battle);
-
-            buffer.Add(new BattleEventBuffer
-            {
-                Value = new BattleEvent
-                {
-                    Type = BattleEventType.ActionDeclared,
-                    Source = player,
-                    Target = player
-                }
-            });
+            Logging.System("Action play event fired.");
 
             ecb.DestroyEntity(requestEntity);
         }

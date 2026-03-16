@@ -2,7 +2,7 @@ using Unity.Entities;
 
 namespace DBUS.Battle.Components.Events
 {
-    public struct BehaviorExecutionRequest : IBufferElementData
+    public struct BehaviourExecutionRequest : IBufferElementData
     {
         public int BehaviourID;
         public int Priority;
