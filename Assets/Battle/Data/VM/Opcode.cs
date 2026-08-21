@@ -9,6 +9,7 @@ namespace Archeus.Battle.Data.VM
         
         StoreState,
         ModifyEventValue,
+        SelectTarget,
 
         Add,
         Sub,

@@ -11,6 +11,8 @@ using Archeus.Battle.VM.Execution;
 using Archeus.Content.Registries;
 using Archeus.Core.Debugging;
 using Archeus.Battle.Data.Events;
+using Archeus.Battle.Components.Ownership;
+using Archeus.Battle.Buffers.Combat;
 
 namespace Archeus.Battle.Systems.Events
 {
@@ -23,6 +25,8 @@ namespace Archeus.Battle.Systems.Events
         private ComponentLookup<BattleRNG> battleRNGLookup;
         private BufferLookup<BehaviourRuntimeState> behaviourStateLookup;
         private BufferLookup<ActiveEffect> activeEffectsLookup;
+        private BufferLookup<BattleParticipant> participantLookup;
+        private ComponentLookup<Team> teamLookup;
 
         public void OnCreate(ref SystemState state)
         {
@@ -31,6 +35,8 @@ namespace Archeus.Battle.Systems.Events
             battleRNGLookup = state.GetComponentLookup<BattleRNG>();
             behaviourStateLookup = state.GetBufferLookup<BehaviourRuntimeState>();
             activeEffectsLookup = state.GetBufferLookup<ActiveEffect>();
+            participantLookup = state.GetBufferLookup<BattleParticipant>();
+            teamLookup = state.GetComponentLookup<Team>();
         }
 
         public void OnUpdate(ref SystemState state)
@@ -41,24 +47,34 @@ namespace Archeus.Battle.Systems.Events
             battleRNGLookup.Update(ref state);
             behaviourStateLookup.Update(ref state);
             activeEffectsLookup.Update(ref state);
+            participantLookup.Update(ref state);
+            teamLookup.Update(ref state);
 
             foreach (var (mainEventQueue, chainedEventQueue, executionRequestQueue, battle) in SystemAPI.Query<DynamicBuffer<BattleEvent>, DynamicBuffer<ChainedBattleEvent>, DynamicBuffer<BehaviourExecutionRequest>>().WithAll<BattleTag>().WithEntityAccess())
             {
                 // BASIC CHECKS
                 if (mainEventQueue.Length == 0 && chainedEventQueue.Length == 0 && executionRequestQueue.Length == 0) continue;
                 if (!SystemAPI.HasComponent<BattleContentRegistry>(battle)) continue;
+                if (!participantLookup.HasBuffer(battle)) continue;
 
                 // CREATE RCIS
                 BlobAssetReference<ContentBlobRegistry> battleRegistryReference = SystemAPI.GetComponent<BattleContentRegistry>(battle).BattleRegistryReference;
+                DynamicBuffer<BattleParticipant> participants = participantLookup[battle];
+
                 BattleContext ctx = new BattleContext
                 {
                     Battle = battle,
                     ChainBuffer = chainedEventQueue,
+
                     StatsLookup = characterStatsLookup,
                     HealthLookup = characterHPLookup,
                     RNGLookup = battleRNGLookup,
                     EffectLookup = activeEffectsLookup,
-                    BattleRegistryReference = battleRegistryReference
+
+                    Participants = participants,
+                    TeamLookup = teamLookup,
+
+                    BattleRegistryReference = battleRegistryReference,
                 };
 
                 // CREATE EVENT STACK
@@ -105,8 +121,6 @@ namespace Archeus.Battle.Systems.Events
                             continue;
                         }
 
-                        Logging.Info(LogCategory.Event, $"Generation of this behaviour: {request.StructuralData.Generation}");
-
                         DynamicBuffer<BehaviourRuntimeState> stateBuffer = behaviourStateLookup[request.Owner];
 
                         BehaviourExecutor.Execute(request, ref frame.Event, ref ctx, stateBuffer);
@@ -119,8 +133,6 @@ namespace Archeus.Battle.Systems.Events
                         int last = chainedEventQueue.Length - 1;
                         BattleEvent evt = chainedEventQueue[last].Event;
                         chainedEventQueue.RemoveAt(last);
-
-                        Logging.Info(LogCategory.Event, $"Generation of this event: {frame.Event.StructuralData.Generation}");
 
                         eventStack.Add(new EventFrame
                         {

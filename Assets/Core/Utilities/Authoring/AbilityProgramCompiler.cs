@@ -94,6 +94,14 @@ public static class AbilityProgramCompiler
                 return (int)ev;
             }
 
+            case AbilityOpcode.SelectTarget:
+            {
+                if (!Enum.TryParse<TargetSelectionType>(arg, out var targetType))
+                    throw new Exception($"Invalid TargetSelectionType: {arg}");
+
+                return (int)targetType;
+            }
+
             case AbilityOpcode.ApplyEffect:
             {
                 uint effectID = StableHash32.HashFromString(arg);

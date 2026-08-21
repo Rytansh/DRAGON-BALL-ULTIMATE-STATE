@@ -93,7 +93,7 @@ public class ContentDefinitionBaker : Baker<ContentDefinitionAuthoring>
         for (int i = 0; i < programDefs.Count; i++)
         {
             WriteProgram(ref outputArray[i], programDefs[i], ref builder, effectMap);
-            Logging.Info(LogCategory.System,"Baked behaviour " + programDefs[i].name + " successfully."); 
+            Logging.Info(LogCategory.System,"Baked program " + programDefs[i].name + " successfully."); 
         }
     }
 

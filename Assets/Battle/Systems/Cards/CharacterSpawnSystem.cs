@@ -11,6 +11,7 @@ using Archeus.Content.Blobs;
 using Archeus.Content.Lookup;
 using Archeus.Core.Debugging;
 using Archeus.Battle.Buffers.Events;
+using Archeus.Battle.Buffers.Combat;
 
 namespace Archeus.Battle.Systems.Cards
 {
@@ -21,41 +22,62 @@ namespace Archeus.Battle.Systems.Cards
         { 
             state.RequireForUpdate<ContentLookupTables>(); 
         } 
-        public void OnUpdate(ref SystemState state) 
-        { 
-            EntityCommandBuffer ecb = new EntityCommandBuffer(Allocator.Temp); 
-            ContentLookupTables lookup = SystemAPI.GetSingleton<ContentLookupTables>(); 
+        public void OnUpdate(ref SystemState state)
+        {
+            EntityCommandBuffer ecb = new EntityCommandBuffer(Allocator.Temp);
+            ContentLookupTables lookup = SystemAPI.GetSingleton<ContentLookupTables>();
 
-            foreach (var (request, requestEntity) in SystemAPI.Query<RefRO<SpawnCharacterRequest>>().WithEntityAccess()) 
-            { 
+            foreach (var (request, requestEntity)in SystemAPI.Query<RefRO<SpawnCharacterRequest>>().WithEntityAccess())
+            {
                 Entity battle = request.ValueRO.Battle;
-                Entity character = ecb.CreateEntity(); 
+                Entity character = ecb.CreateEntity();
 
-                if (!SystemAPI.HasComponent<BattleContentRegistry>(battle)) {ecb.DestroyEntity(requestEntity); continue;}
+                if (!SystemAPI.HasComponent<BattleContentRegistry>(battle))
+                {
+                    ecb.DestroyEntity(requestEntity);
+                    continue;
+                }
 
                 // CREATE RCIS
-                BattleContentRegistry battleContent = SystemAPI.GetComponent<BattleContentRegistry>(battle);
-                BlobAssetReference<ContentBlobRegistry> registryRef = battleContent.BattleRegistryReference;
+                BattleContentRegistry battleContent =
+                    SystemAPI.GetComponent<BattleContentRegistry>(battle);
+
+                BlobAssetReference<ContentBlobRegistry> registryRef =
+                    battleContent.BattleRegistryReference;
+
                 ref ContentBlobRegistry registry = ref registryRef.Value;
-                RefRW<BattleRuntimeIDCounter> counter = SystemAPI.GetComponentRW<BattleRuntimeIDCounter>(battle); 
+
+                RefRW<BattleRuntimeIDCounter> counter =
+                    SystemAPI.GetComponentRW<BattleRuntimeIDCounter>(battle);
 
                 // INCREMENT ID COUNTER FOR ASSET
-                uint runtimeID = counter.ValueRO.NextID; 
-                counter.ValueRW.NextID++; 
+                uint runtimeID = counter.ValueRO.NextID;
+                counter.ValueRW.NextID++;
 
                 // GET CHARACTER ASSET
-                int characterIndex = lookup.CharacterIDToIndex[request.ValueRO.CharacterID]; 
-                ref CharacterDefinitionBlob characterDef = ref registry.Characters[characterIndex]; 
+                int characterIndex =
+                    lookup.CharacterIDToIndex[request.ValueRO.CharacterID];
+
+                ref CharacterDefinitionBlob characterDef =
+                    ref registry.Characters[characterIndex];
 
                 // BUILD CHARACTER COMPONENTS
-                BuildCharacter(ecb, character, battle, runtimeID, request, lookup, ref registry);
+                BuildCharacter(ecb,character,battle,runtimeID,request,lookup,ref registry);
 
-                Logging.Info(LogCategory.Setup, "Spawned character " + characterDef.ID + " with runtime ID " + runtimeID + " successfully. (Attack: " + characterDef.CharacterBlobBaseStats.Attack + ")");
-                ecb.DestroyEntity(requestEntity); 
-            } 
-            ecb.Playback(state.EntityManager); 
-            ecb.Dispose(); 
-        } 
+                // REGISTER WITH BATTLE
+                ecb.AppendToBuffer(battle, new BattleParticipant
+                {
+                    Participant = character
+                });
+
+                Logging.Info(LogCategory.Setup,"Spawned character " +characterDef.ID +" with runtime ID " +runtimeID +" successfully. (Attack: " +characterDef.CharacterBlobBaseStats.Attack +")");
+
+                ecb.DestroyEntity(requestEntity);
+            }
+
+            ecb.Playback(state.EntityManager);
+            ecb.Dispose();
+        }
 
         private void BuildCharacter(EntityCommandBuffer ecb, Entity character, Entity battle, uint runtimeID, RefRO<SpawnCharacterRequest> request, ContentLookupTables lookup, ref ContentBlobRegistry registry)
         {

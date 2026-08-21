@@ -10,6 +10,7 @@ using Archeus.Content.Registries;
 using Archeus.Game.Bootstrap;
 using Archeus.Core.Debugging;
 using Archeus.Battle.Components.Combat;
+using Archeus.Battle.Buffers.Combat;
 
 namespace Archeus.Battle.Systems.Setup
 {
@@ -53,6 +54,7 @@ namespace Archeus.Battle.Systems.Setup
             ecb.AddComponent(battle, new BattleState { Phase = BattlePhase.Creating });
             ecb.AddComponent(battle, new BattleRuntimeIDCounter { NextID = 100 });
             ecb.AddComponent(battle, new BattleContentRegistry { BattleRegistryReference = SystemAPI.GetSingleton<ContentBlobRegistryComponent>().BlobRegistryReference });
+            ecb.AddBuffer<BattleParticipant>(battle);
 
             // EVENT RELATED COMPONENTS / BUFFERS
             ecb.AddBuffer<BattleEvent>(battle);

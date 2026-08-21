@@ -35,7 +35,10 @@ namespace Archeus.Battle.VM.Execution
                 CharacterStatsLookup = ctx.StatsLookup,
                 ContentRegistry = ctx.BattleRegistryReference,
                 StateBuffer = stateBuffer,
-                StateIndex = stateIndex
+                StateIndex = stateIndex,
+                BattleParticipants = ctx.Participants,
+                TeamLookup = ctx.TeamLookup,
+                CurrentHealthLookup = ctx.HealthLookup
             };
 
             AbilityInterpreter.Execute(ref frame, ref context, ref evt);
