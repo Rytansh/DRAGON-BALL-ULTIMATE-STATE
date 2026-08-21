@@ -1,4 +1,5 @@
 using Archeus.Core.Debugging;
+using Unity.Entities;
 
 namespace Archeus.Game.Bootstrap
 {
@@ -20,12 +21,14 @@ namespace Archeus.Game.Bootstrap
         public void Initialise()
         {
             Logging.Info(LogCategory.Setup, "=== Game Bootstrap Started ===");
+            
+            World ecsWorld = World.DefaultGameObjectInjectionWorld;
+            rootContext.Register<World>(ecsWorld);
 
             // Register all processes (in any order)
             sharedOrchestrator.Register(new LoggingProcess());
             sharedOrchestrator.Register(new ConfigProcess());
             sharedOrchestrator.Register(new SeedGenProcess());
-            sharedOrchestrator.Register(new RNGDeterminationProcess());
             sharedOrchestrator.Register(new RNGTestProcess());
             simulationOrchestrator.Register(new SimulationWorldProcess());
             simulationOrchestrator.Register(new EventBusProcess());

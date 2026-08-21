@@ -2,7 +2,7 @@ using Archeus.Battle.Buffers.Events;
 using Archeus.Battle.Data.Effects;
 using Archeus.Battle.Data.Events;
 using Archeus.Battle.Events.Payloads;
-using Archeus.Battle.Events.Runtime;
+using Archeus.Battle.Events.Context;
 using Archeus.Core.Debugging;
 using Unity.Entities;
 
@@ -25,7 +25,13 @@ namespace Archeus.Battle.Events.Resolvers
 
             ApplyEffect(activeEffects, evt, effectDef.StackBehaviour);
 
-            Logging.Info(LogCategory.Testing, $"Applied effect {evt.Payload.Effect.EffectIndex} to target {target.Index} with strength {evt.Payload.Effect.Strength}% for {evt.Payload.Effect.Duration} turns. This effect has {effectDef.StatModifiers.Length} stat modifiers.");
+            if (evt.Payload.Effect.Duration != -1)
+            {
+                Logging.Info(LogCategory.Testing, $"Applied effect {evt.Payload.Effect.EffectIndex} to target {target.Index} with strength {evt.Payload.Effect.Strength}% for {evt.Payload.Effect.Duration} turns. This effect has {effectDef.StatModifiers.Length} stat modifiers.");
+            } else
+            {
+                Logging.Info(LogCategory.Testing, $"Applied effect {evt.Payload.Effect.EffectIndex} to target {target.Index} with strength {evt.Payload.Effect.Strength}% permanently. This effect has {effectDef.StatModifiers.Length} stat modifiers.");
+            }
 
             ctx.ChainBuffer.Add(new ChainedBattleEvent
             {
@@ -44,7 +50,8 @@ namespace Archeus.Battle.Events.Resolvers
                             Duration = evt.Payload.Effect.Duration,
                             IsPermanent = evt.Payload.Effect.IsPermanent
                         }
-                    }
+                    },
+                    StructuralData = evt.StructuralData
                 }
             });
         }

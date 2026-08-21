@@ -2,7 +2,7 @@ using System.Diagnostics;
 using Archeus.Battle.Buffers.Events;
 using Archeus.Battle.Data.Events;
 using Archeus.Battle.Events.Payloads;
-using Archeus.Battle.Events.Runtime;
+using Archeus.Battle.Events.Context;
 
 namespace Archeus.Battle.Events.Resolvers
 {
@@ -30,7 +30,8 @@ namespace Archeus.Battle.Events.Resolvers
                         {
                             AttackMultiplier = evt.Payload.Damage.AttackMultiplier,
                         }
-                    }
+                    },
+                    StructuralData = evt.StructuralData
                 }
             });
         }

@@ -4,8 +4,7 @@ namespace Archeus.Game.Bootstrap
     {
         public const int Logging = 0;
         public const int Seeding = 100;
-        public const int RNG = 200;
-        public const int RNGTests = 210;
+        public const int RNGTests = 200;
     }
 
     public static class SimulationBootstrapOrder

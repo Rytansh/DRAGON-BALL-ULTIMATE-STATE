@@ -1,3 +1,4 @@
+using Archeus.Battle.Events.Context;
 using Unity.Entities;
 
 namespace Archeus.Battle.Buffers.VM
@@ -12,5 +13,7 @@ namespace Archeus.Battle.Buffers.VM
         public Entity Owner;
         public Entity Source;
         public Entity Target;
+
+        public EventStructuralData StructuralData;
     }
 }

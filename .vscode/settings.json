@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "State Archeus.sln"
+    "dotnet.defaultSolution": "State Archeus Game.sln"
 }

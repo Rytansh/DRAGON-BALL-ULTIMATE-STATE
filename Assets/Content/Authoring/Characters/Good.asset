@@ -23,7 +23,7 @@ MonoBehaviour:
     Attack: 30
     Defense: 10
     CritDMG: 100
-    CritRATE: 50
+    CritRATE: 0
     Reactivity: 534
     SustainPOWER: 0
     MagicalDMGBonus: 0

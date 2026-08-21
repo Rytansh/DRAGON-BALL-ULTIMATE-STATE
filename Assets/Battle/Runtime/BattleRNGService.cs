@@ -1,5 +1,5 @@
 using Archeus.Battle.Components.Core;
-using Archeus.Battle.Events.Runtime;
+using Archeus.Battle.Events.Context;
 using Archeus.Core.Debugging;
 using Archeus.Game.Bootstrap;
 using System;
@@ -12,7 +12,7 @@ public static class BattleRNGService
 
         DeterministicRNG rng = new DeterministicRNG(battleRNG.StateA, battleRNG.StateB);
 
-        Logging.Info(LogCategory.RNG, $"Performing roll with {chance} chance of success...");
+        Logging.Info(LogCategory.RNG, $"Performing roll with a {chance}% chance of success...");
 
         chance /= 100f;
         chance = Math.Clamp(chance, 0f, 1f);

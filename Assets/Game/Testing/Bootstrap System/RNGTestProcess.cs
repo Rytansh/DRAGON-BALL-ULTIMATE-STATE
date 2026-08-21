@@ -9,7 +9,6 @@ public class RNGTestProcess : IBootstrapProcess
     public void Initialise(WorldContext context)
     {
         ISeedService seedService = context.Resolve<ISeedService>();
-        IRNGProvider rngProvider = context.Resolve<IRNGProvider>();
 
         ulong worldSeed = seedService.WorldSeed;
         Logging.Info(LogCategory.Testing,$"WorldSeed = {worldSeed}");

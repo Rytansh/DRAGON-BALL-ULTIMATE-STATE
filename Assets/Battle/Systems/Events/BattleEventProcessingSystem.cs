@@ -3,7 +3,7 @@ using Unity.Collections;
 using Archeus.Battle.Components.Stats;
 using Archeus.Battle.Components.Core;
 using Archeus.Battle.Components.Tags;
-using Archeus.Battle.Events.Runtime;
+using Archeus.Battle.Events.Context;
 using Archeus.Battle.Events.Resolvers;
 using Archeus.Battle.Buffers.Events;
 using Archeus.Battle.Buffers.VM;
@@ -91,7 +91,7 @@ namespace Archeus.Battle.Systems.Events
 
                     // GET LAST ELEMENT IN STACK
                     ref EventFrame frame = ref eventStack.ElementAt(eventStack.Length - 1);
-                    
+
                     // PROCESS BEHAVIOURS
                     if (executionRequestQueue.Length > 0)
                     {
@@ -105,6 +105,8 @@ namespace Archeus.Battle.Systems.Events
                             continue;
                         }
 
+                        Logging.Info(LogCategory.Event, $"Generation of this behaviour: {request.StructuralData.Generation}");
+
                         DynamicBuffer<BehaviourRuntimeState> stateBuffer = behaviourStateLookup[request.Owner];
 
                         BehaviourExecutor.Execute(request, ref frame.Event, ref ctx, stateBuffer);
@@ -117,6 +119,8 @@ namespace Archeus.Battle.Systems.Events
                         int last = chainedEventQueue.Length - 1;
                         BattleEvent evt = chainedEventQueue[last].Event;
                         chainedEventQueue.RemoveAt(last);
+
+                        Logging.Info(LogCategory.Event, $"Generation of this event: {frame.Event.StructuralData.Generation}");
 
                         eventStack.Add(new EventFrame
                         {

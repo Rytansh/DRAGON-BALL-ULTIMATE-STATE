@@ -3,7 +3,7 @@ using Unity.Collections;
 using Archeus.Battle.Buffers.Events;
 using Archeus.Battle.Buffers.VM;
 using Archeus.Battle.Components.Stats;
-using Archeus.Battle.Events.Runtime;
+using Archeus.Battle.Events.Context;
 using Archeus.Content.Registries;
 using Archeus.Content.Blobs;
 using Archeus.Battle.Data.Events;
@@ -44,6 +44,27 @@ namespace Archeus.Battle.VM.Execution
                 if (!BehaviourConditionEvaluator.Evaluate(entity, evt, ref ctx, ref trigger))
                     continue;
 
+                EventStructuralData structuralData;
+
+                if (phase == BattleEventPhase.PostResolution)
+                {
+                    structuralData = new EventStructuralData
+                    {
+                        GroupID = evt.StructuralData.GroupID,
+                        Generation = (ushort)(evt.StructuralData.Generation + 1),
+                        ParentFrameID = 0
+                    };
+                }
+                else
+                {
+                    structuralData = new EventStructuralData
+                    {
+                        GroupID = evt.StructuralData.GroupID,
+                        Generation = evt.StructuralData.Generation,
+                        ParentFrameID = 0
+                    };
+                }
+
                 results.Add(new BehaviourExecutionRequest
                 {
                     BehaviourIndex = behaviourIndex,
@@ -53,7 +74,9 @@ namespace Archeus.Battle.VM.Execution
 
                     Owner = entity,
                     Source = evt.Source,
-                    Target = evt.Target
+                    Target = evt.Target,
+
+                    StructuralData = structuralData
                 });
             }
         }

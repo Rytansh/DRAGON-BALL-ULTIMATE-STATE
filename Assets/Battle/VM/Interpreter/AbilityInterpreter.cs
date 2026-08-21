@@ -219,7 +219,8 @@ namespace Archeus.Battle.VM.Execution
                                 {
                                     AttackMultiplier = multiplier
                                 }
-                            }
+                            },
+                            StructuralData = context.EventData
                         });
                         break;
                     }
@@ -250,7 +251,8 @@ namespace Archeus.Battle.VM.Execution
                                     Duration = duration,
                                     IsPermanent = isPermanent
                                 }
-                            }
+                            },
+                            StructuralData = context.EventData
                         });
 
                         break;

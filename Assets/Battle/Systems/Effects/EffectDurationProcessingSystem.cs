@@ -35,7 +35,7 @@ namespace Archeus.Battle.Systems.Effects
 
                         if (effect.IsPermanent)
                         {
-                            Logging.Info(LogCategory.Testing,$"Ticked effect {effect.EffectIndex} on entity {entity.Index}. Remaining: Permanent");
+                            Logging.Info(LogCategory.Testing,$"Effect {effect.EffectIndex} on entity {entity.Index} is permanent.");
                             continue;
                         }
 

@@ -1,7 +1,7 @@
 using Archeus.Battle.Buffers.Events;
 using Archeus.Battle.Data.Events;
 
-namespace Archeus.Battle.Events.Runtime
+namespace Archeus.Battle.Events.Context
 {
     public struct EventFrame
     {

@@ -3,7 +3,7 @@ using Archeus.Battle.Buffers.Events;
 using Archeus.Battle.Data.Effects;
 using Archeus.Battle.Data.Events;
 using Archeus.Battle.Events.Payloads;
-using Archeus.Battle.Events.Runtime;
+using Archeus.Battle.Events.Context;
 using Archeus.Battle.Stats;
 using Unity.Entities;
 
@@ -40,7 +40,8 @@ namespace Archeus.Battle.Events.Resolvers
                             DidCrit = evt.Payload.Damage.DidCrit,
                             CritMultiplier = evt.Payload.Damage.CritMultiplier
                         }
-                    }
+                    },
+                    StructuralData = evt.StructuralData
                 }
             });
         }
