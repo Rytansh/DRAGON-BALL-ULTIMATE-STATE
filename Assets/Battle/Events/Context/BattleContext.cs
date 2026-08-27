@@ -14,7 +14,7 @@ namespace Archeus.Battle.Events.Context
         public Entity Battle;
 
         // Specific resources belonging to THIS battle
-        public DynamicBuffer<ChainedBattleEvent> ChainBuffer;
+        public DynamicBuffer<ChainedBattleEvent> ChainedEventQueue;
         public DynamicBuffer<PresentationFact> PresentationFacts;
         public DynamicBuffer<BattleParticipant> Participants;
 

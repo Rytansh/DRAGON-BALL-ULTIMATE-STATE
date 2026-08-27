@@ -1,22 +1,28 @@
 using Archeus.Battle.Buffers.Events;
-using Archeus.Battle.Events.Payloads;
-using Archeus.Core.Debugging;
+using Archeus.Battle.Components.Ownership;
 using Archeus.Battle.Data.Events;
 using Archeus.Battle.Data.VM;
+using Archeus.Battle.Events.Factory;
+using Archeus.Battle.Events.Payloads;
+using Archeus.Core.Debugging;
 using Unity.Collections;
 using Unity.Entities;
-using Archeus.Battle.Components.Ownership;
 
 namespace Archeus.Battle.VM.Execution
 {
     public static class AbilityInterpreter
     {
         private const int MAX_VM_STEPS = 256;
-        public static void Execute(ref AbilityExecutionFrame frame, ref AbilityExecutionContext context, ref BattleEvent evt)
+
+        public static void Execute(
+            ref AbilityExecutionFrame frame,
+            ref AbilityExecutionContext context,
+            ref BattleEvent evt
+        )
         {
             int safetyCounter = 0;
             ref var program = ref context.ContentRegistry.Value.AbilityPrograms[frame.ProgramIndex];
-            FixedList512Bytes<Entity> targets = new FixedList512Bytes<Entity>{frame.Target};
+            FixedList512Bytes<Entity> targets = new FixedList512Bytes<Entity> { frame.Target };
 
             while (frame.InstructionPointer < program.Instructions.Length)
             {
@@ -45,7 +51,7 @@ namespace Archeus.Battle.VM.Execution
                             0 => stats.Attack,
                             1 => stats.Defense,
                             2 => stats.MaxHealth,
-                            _ => 0
+                            _ => 0,
                         };
                         Push(ref frame, value);
                         break;
@@ -59,7 +65,7 @@ namespace Archeus.Battle.VM.Execution
                             EventValueType.DamageBase => evt.Payload.Damage.BaseDamage,
                             EventValueType.DamageFinal => evt.Payload.Damage.FinalDamage,
                             EventValueType.DamageMultiplier => evt.Payload.Damage.AttackMultiplier,
-                            _ => 0f
+                            _ => 0f,
                         };
 
                         Push(ref frame, value);
@@ -214,7 +220,6 @@ namespace Archeus.Battle.VM.Execution
                         break;
                     }
 
-
                     // GAMEPLAY OPCODES //
 
                     case AbilityOpcode.DealDamage:
@@ -223,21 +228,24 @@ namespace Archeus.Battle.VM.Execution
 
                         foreach (Entity target in targets)
                         {
-                            EmitEvent(ref context, new BattleEvent
-                            {
-                                Type = BattleEventType.DamageRequested,
-                                Scope = BattleEventScope.Targeted,
-                                Source = frame.Source,
-                                Target = target,
-                                Payload = new EventPayload
+                            BattleEventEmitter.EmitContinuationEvent(
+                                new BattleEvent
                                 {
-                                    Damage = new DamagePayload
+                                    Type = BattleEventType.DamageRequested,
+                                    Scope = BattleEventScope.Targeted,
+                                    Source = frame.Source,
+                                    Target = target,
+                                    Payload = new EventPayload
                                     {
-                                        AttackMultiplier = multiplier
-                                    }
+                                        Damage = new DamagePayload
+                                        {
+                                            AttackMultiplier = multiplier,
+                                        },
+                                    },
                                 },
-                                StructuralData = context.EventData
-                            });
+                                ref context.ChainedEventQueue,
+                                in context.EmissionContext
+                            );
                         }
                         break;
                     }
@@ -247,36 +255,42 @@ namespace Archeus.Battle.VM.Execution
                         int effectIndex = instruction.A;
 
                         bool isPermanent = false;
-                        
+
                         float strength = Pop(ref frame);
                         int duration = (int)Pop(ref frame);
 
-                        if (duration == -1) {isPermanent = true;}
+                        if (duration == -1)
+                        {
+                            isPermanent = true;
+                        }
 
                         foreach (Entity target in targets)
                         {
-                            EmitEvent(ref context, new BattleEvent
-                            {
-                                Type = BattleEventType.EffectApplicationRequested,
-                                Scope = BattleEventScope.Targeted,
-                                Source = frame.Source,
-                                Target = target,
-                                Payload = new EventPayload
+                            BattleEventEmitter.EmitContinuationEvent(
+                                new BattleEvent
                                 {
-                                    Effect = new EffectPayload
+                                    Type = BattleEventType.EffectApplicationRequested,
+                                    Scope = BattleEventScope.Targeted,
+                                    Source = frame.Source,
+                                    Target = target,
+                                    Payload = new EventPayload
                                     {
-                                        EffectIndex = effectIndex,
-                                        Strength = strength,
-                                        Duration = duration,
-                                        IsPermanent = isPermanent
-                                    }
+                                        Effect = new EffectPayload
+                                        {
+                                            EffectIndex = effectIndex,
+                                            Strength = strength,
+                                            Duration = duration,
+                                            IsPermanent = isPermanent,
+                                        },
+                                    },
                                 },
-                                StructuralData = context.EventData
-                            });
+                                ref context.ChainedEventQueue,
+                                in context.EmissionContext
+                            );
                         }
                         break;
                     }
-                    
+
                     // VM FLOW OPCODES //
                     case AbilityOpcode.Jump:
                     {
@@ -316,7 +330,10 @@ namespace Archeus.Battle.VM.Execution
                     // DEFAULT
                     default:
                     {
-                        Logging.Warn(LogCategory.VM, $"Unknown opcode {instruction.Opcode}. Cancelling execution.");
+                        Logging.Warn(
+                            LogCategory.VM,
+                            $"Unknown opcode {instruction.Opcode}. Cancelling execution."
+                        );
                         return;
                     }
                 }
@@ -361,15 +378,12 @@ namespace Archeus.Battle.VM.Execution
             return frame.Stack[frame.Stack.Length - 1];
         }
 
-        private static void EmitEvent(ref AbilityExecutionContext context, BattleEvent evt)
-        {
-            context.ChainedEventQueue.Add(new ChainedBattleEvent
-            {
-                Event = evt
-            });
-        }
-
-        private static void SelectTargets(ref FixedList512Bytes<Entity> targets, ref AbilityExecutionFrame frame, ref AbilityExecutionContext context, TargetSelectionType type)
+        private static void SelectTargets(
+            ref FixedList512Bytes<Entity> targets,
+            ref AbilityExecutionFrame frame,
+            ref AbilityExecutionContext context,
+            TargetSelectionType type
+        )
         {
             targets.Clear();
 
@@ -393,44 +407,37 @@ namespace Archeus.Battle.VM.Execution
 
                 case TargetSelectionType.AllEnemies:
                 {
-                    SelectTeamTargets(
-                        ref targets,
-                        ref frame,
-                        ref context,
-                        selectSameTeam: false
-                    );
+                    SelectTeamTargets(ref targets, ref frame, ref context, selectSameTeam: false);
 
                     break;
                 }
 
                 case TargetSelectionType.AllAllies:
                 {
-                    SelectTeamTargets(
-                        ref targets,
-                        ref frame,
-                        ref context,
-                        selectSameTeam: true
-                    );
+                    SelectTeamTargets(ref targets, ref frame, ref context, selectSameTeam: true);
 
                     break;
                 }
             }
         }
 
-        private static void SelectTeamTargets(ref FixedList512Bytes<Entity> targets, ref AbilityExecutionFrame frame, ref AbilityExecutionContext context, bool selectSameTeam)
+        private static void SelectTeamTargets(
+            ref FixedList512Bytes<Entity> targets,
+            ref AbilityExecutionFrame frame,
+            ref AbilityExecutionContext context,
+            bool selectSameTeam
+        )
         {
             Entity referenceEntity = frame.BehaviourOwner;
 
             if (!context.TeamLookup.HasComponent(referenceEntity))
                 return;
 
-            BattleSide referenceSide =
-                context.TeamLookup[referenceEntity].Side;
+            BattleSide referenceSide = context.TeamLookup[referenceEntity].Side;
 
             for (int i = 0; i < context.BattleParticipants.Length; i++)
             {
-                Entity candidate =
-                    context.BattleParticipants[i].Participant;
+                Entity candidate = context.BattleParticipants[i].Participant;
 
                 // Participant must currently have a Team.
                 if (!context.TeamLookup.HasComponent(candidate))
@@ -443,21 +450,16 @@ namespace Archeus.Battle.VM.Execution
                 if (context.CurrentHealthLookup[candidate].Value <= 0f)
                     continue;
 
-                BattleSide candidateSide =
-                    context.TeamLookup[candidate].Side;
+                BattleSide candidateSide = context.TeamLookup[candidate].Side;
 
-                bool sameTeam =
-                    candidateSide == referenceSide;
+                bool sameTeam = candidateSide == referenceSide;
 
                 if (sameTeam != selectSameTeam)
                     continue;
 
                 if (targets.Length >= targets.Capacity)
                 {
-                    Logging.Warn(
-                        LogCategory.VM,
-                        "VM target collection exceeded capacity."
-                    );
+                    Logging.Warn(LogCategory.VM, "VM target collection exceeded capacity.");
 
                     return;
                 }

@@ -8,6 +8,7 @@ using Archeus.Battle.Buffers.Events;
 using Archeus.Battle.Events.Payloads;
 using Archeus.Core.Debugging;
 using Archeus.Battle.Data.Events;
+using Archeus.Battle.Events.Factory;
 
 namespace Archeus.Battle.Systems.Turnflow
 {
@@ -25,15 +26,20 @@ namespace Archeus.Battle.Systems.Turnflow
                 turnCounter.ValueRW.CurrentTurn++;
                 Logging.Info(LogCategory.Combat, $" Starting turn {turnCounter.ValueRW.CurrentTurn}.");
                 var eventBuffer = SystemAPI.GetBuffer<BattleEvent>(battle);
+                RefRW<BattleEventGroupIDCounter> groupCounter = SystemAPI.GetComponentRW<BattleEventGroupIDCounter>(battle);
 
-                eventBuffer.Add(new BattleEvent
+                BattleEventEmitter.EmitOriginEvent(
+                new BattleEvent
                     {
                         Type = BattleEventType.TurnStarted,
                         Scope = BattleEventScope.Global,
                         Source = battle,
                         Target = Entity.Null,
                         Payload = new EventPayload{}
-                    });
+                    }, 
+                ref eventBuffer, 
+                groupCounter
+                );
 
                 foreach (var (ownedBattle, remainingAP, maxAP, player)
                         in SystemAPI.Query<

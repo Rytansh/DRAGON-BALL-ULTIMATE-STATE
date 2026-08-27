@@ -6,6 +6,7 @@ using Archeus.Battle.Events.Payloads;
 using Archeus.Battle.Buffers.Events;
 using Archeus.Core.Debugging;
 using Archeus.Battle.Data.Events;
+using Archeus.Battle.Events.Factory;
 
 namespace Archeus.Battle.Systems.Turnflow
 {
@@ -22,15 +23,20 @@ namespace Archeus.Battle.Systems.Turnflow
                     continue;
                 
                 DynamicBuffer<BattleEvent> eventBuffer = SystemAPI.GetBuffer<BattleEvent>(battle);
+                RefRW<BattleEventGroupIDCounter> groupCounter = SystemAPI.GetComponentRW<BattleEventGroupIDCounter>(battle);
 
-                eventBuffer.Add(new BattleEvent
+                BattleEventEmitter.EmitOriginEvent(
+                new BattleEvent
                     {
                         Type = BattleEventType.TurnEnded,
                         Scope = BattleEventScope.Global,
                         Source = battle,
                         Target = Entity.Null,
                         Payload = new EventPayload{}
-                    });
+                    }, 
+                ref eventBuffer, 
+                groupCounter
+                );
 
                 ecb.AddComponent<BattleTurnEndCompleteTag>(battle);
                 ecb.AddComponent<EffectDurationsProcessingTag>(battle);

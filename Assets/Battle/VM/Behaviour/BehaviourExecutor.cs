@@ -5,6 +5,7 @@ using Archeus.Battle.Events.Context;
 using Archeus.Battle.Components.Stats;
 using Archeus.Content.Registries;
 using Archeus.Content.Blobs;
+using Archeus.Core.Debugging;
 
 namespace Archeus.Battle.VM.Execution
 {
@@ -20,6 +21,28 @@ namespace Archeus.Battle.VM.Execution
 
             int programIndex = trigger.VMProgramIndex;
 
+            Logging.Info(
+    LogCategory.Event,
+    $"[BEHAVIOUR EXECUTE] " +
+    $"BehaviourIndex={request.BehaviourIndex} | " +
+    $"TriggerIndex={request.TriggerIndex} | " +
+    $"ProgramIndex={trigger.VMProgramIndex} | " +
+    $"Owner={request.Owner.Index} | " +
+    $"Gen={request.EmissionContext.StructuralData.Generation}"
+);
+
+if (programIndex < 0 ||
+    programIndex >= registry.AbilityPrograms.Length)
+{
+    Logging.Warn(
+        LogCategory.Event,
+        $"Invalid VM program index {programIndex}. " +
+        $"AbilityPrograms.Length={registry.AbilityPrograms.Length}"
+    );
+
+    return;
+}
+
             AbilityExecutionFrame frame = new AbilityExecutionFrame
             {
                 ProgramIndex = programIndex,
@@ -31,14 +54,15 @@ namespace Archeus.Battle.VM.Execution
 
             AbilityExecutionContext context = new AbilityExecutionContext
             {
-                ChainedEventQueue = ctx.ChainBuffer,
+                ChainedEventQueue = ctx.ChainedEventQueue,
                 CharacterStatsLookup = ctx.StatsLookup,
                 ContentRegistry = ctx.BattleRegistryReference,
                 StateBuffer = stateBuffer,
                 StateIndex = stateIndex,
                 BattleParticipants = ctx.Participants,
                 TeamLookup = ctx.TeamLookup,
-                CurrentHealthLookup = ctx.HealthLookup
+                CurrentHealthLookup = ctx.HealthLookup,
+                EmissionContext = request.EmissionContext
             };
 
             AbilityInterpreter.Execute(ref frame, ref context, ref evt);

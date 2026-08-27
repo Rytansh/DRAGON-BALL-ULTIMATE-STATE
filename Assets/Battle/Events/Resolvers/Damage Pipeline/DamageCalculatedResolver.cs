@@ -6,12 +6,13 @@ using Archeus.Battle.Events.Payloads;
 using Archeus.Battle.Events.Context;
 using Archeus.Battle.Stats;
 using Unity.Entities;
+using Archeus.Battle.Events.Factory;
 
 namespace Archeus.Battle.Events.Resolvers
 {
     public static class DamageCalculatedResolver
     {
-        public static void Resolve(ref BattleContext ctx, BattleEvent evt)
+        public static void Resolve(ref BattleContext ctx, BattleEvent evt, in EventEmissionContext emissionContext)
         {
             Entity attacker = evt.Source;
             Entity target = evt.Target;
@@ -31,29 +32,28 @@ namespace Archeus.Battle.Events.Resolvers
                 critMultiplier = 1  +  criticalDamage / 100;
                 finalDamage *= critMultiplier;
             }
-            
-            ctx.ChainBuffer.Add(new ChainedBattleEvent
+
+            BattleEvent damageMitigatedEvent = new BattleEvent
             {
-                Event = new BattleEvent
+                Type = BattleEventType.DamageMitigated,
+                Scope = evt.Scope,
+                Source = attacker,
+                Target = target,
+                Payload = new EventPayload
                 {
-                    Type = BattleEventType.DamageMitigated,
-                    Scope = evt.Scope,
-                    Source = attacker,
-                    Target = target,
-                    Payload = new EventPayload
+                    Damage = new DamagePayload
                     {
-                        Damage = new DamagePayload
-                        {
-                            AttackMultiplier = evt.Payload.Damage.AttackMultiplier,
-                            BaseDamage = evt.Payload.Damage.BaseDamage,
-                            FinalDamage = finalDamage,
-                            DidCrit = didCrit,
-                            CritMultiplier = critMultiplier
-                        }
-                    },
-                    StructuralData = evt.StructuralData
-                }
-            });
+                        AttackMultiplier = evt.Payload.Damage.AttackMultiplier,
+                        BaseDamage = evt.Payload.Damage.BaseDamage,
+                        FinalDamage = finalDamage,
+                        DidCrit = didCrit,
+                        CritMultiplier = critMultiplier
+                    }
+                },
+                StructuralData = evt.StructuralData
+            };
+            
+            BattleEventEmitter.EmitContinuationEvent(damageMitigatedEvent, ref ctx.ChainedEventQueue, in emissionContext);
         }
     }
 }

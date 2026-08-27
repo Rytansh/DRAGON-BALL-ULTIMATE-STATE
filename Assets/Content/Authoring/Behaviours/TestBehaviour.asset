@@ -17,7 +17,7 @@ MonoBehaviour:
   - EventType: 0
     Phase: 0
     OwnerType: 1
-    VMProgramID: TestAttack
+    VMProgramID: TestAOEAttack
     Priority: 0
     Conditions: []
   - EventType: 13
@@ -36,5 +36,11 @@ MonoBehaviour:
     Phase: 0
     OwnerType: 0
     VMProgramID: ResetTriggerTurnStart
+    Priority: 0
+    Conditions: []
+  - EventType: 14
+    Phase: 2
+    OwnerType: 1
+    VMProgramID: IncreaseAttack20Percent
     Priority: 0
     Conditions: []

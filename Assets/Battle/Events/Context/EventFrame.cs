@@ -5,8 +5,10 @@ namespace Archeus.Battle.Events.Context
 {
     public struct EventFrame
     {
+        public uint ID;
         public BattleEvent Event;
         public BattleEventPhase Phase;
         public bool PhaseStarted;
+        public bool Completed;
     }
 }

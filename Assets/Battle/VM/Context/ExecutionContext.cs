@@ -21,6 +21,6 @@ namespace Archeus.Battle.VM.Execution
         public DynamicBuffer<BehaviourRuntimeState> StateBuffer;
         public int StateIndex;
 
-        public EventStructuralData EventData;
+        public EventEmissionContext EmissionContext;
     }
 }

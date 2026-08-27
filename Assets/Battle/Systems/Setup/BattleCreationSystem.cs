@@ -53,6 +53,8 @@ namespace Archeus.Battle.Systems.Setup
             ecb.AddComponent(battle, new BattleRNG {StateA = rng.StateA, StateB = rng.StateB});
             ecb.AddComponent(battle, new BattleState { Phase = BattlePhase.Creating });
             ecb.AddComponent(battle, new BattleRuntimeIDCounter { NextID = 100 });
+            ecb.AddComponent(battle, new BattleEventFrameIDCounter { NextID = 1 });
+            ecb.AddComponent(battle, new BattleEventGroupIDCounter { NextID = 1 });
             ecb.AddComponent(battle, new BattleContentRegistry { BattleRegistryReference = SystemAPI.GetSingleton<ContentBlobRegistryComponent>().BlobRegistryReference });
             ecb.AddBuffer<BattleParticipant>(battle);
 

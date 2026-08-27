@@ -10,6 +10,7 @@ using Archeus.Battle.Events.Payloads;
 using Archeus.Battle.Buffers.Events;
 using Archeus.Core.Debugging;
 using Archeus.Battle.Data.Events;
+using Archeus.Battle.Events.Factory;
 
 namespace Archeus.Battle.Systems.Turnflow
 {
@@ -59,22 +60,26 @@ namespace Archeus.Battle.Systems.Turnflow
                 }
 
                 var eventBuffer = SystemAPI.GetBuffer<BattleEvent>(battle);
+                RefRW<BattleEventGroupIDCounter> groupCounter = SystemAPI.GetComponentRW<BattleEventGroupIDCounter>(battle);
 
-                eventBuffer.Add(new BattleEvent
-                {
-                    Type = BattleEventType.TestEvent,
-                    Scope = BattleEventScope.Targeted,
-                    Source = selectedCharacter.Value,
-                    Target = selectedTarget.Value,
-                    Payload = new EventPayload
+                BattleEventEmitter.EmitOriginEvent(
+                new BattleEvent
                     {
-                        Damage = new DamagePayload
+                        Type = BattleEventType.TestEvent,
+                        Scope = BattleEventScope.Targeted,
+                        Source = selectedCharacter.Value,
+                        Target = selectedTarget.Value,
+                        Payload = new EventPayload
                         {
-                            AttackMultiplier = 1.0f
+                            Damage = new DamagePayload
+                            {
+                                AttackMultiplier = 1.0f
+                            }
                         }
-                    }
-                });
-
+                    },
+                ref eventBuffer,
+                groupCounter
+                );
 
                 ecb.DestroyEntity(requestEntity);
             }

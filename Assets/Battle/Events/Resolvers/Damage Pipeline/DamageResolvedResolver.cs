@@ -8,12 +8,13 @@ using Archeus.Battle.Events.Payloads;
 using Archeus.Battle.Stats;
 using Archeus.Battle.Data.Effects;
 using Archeus.Battle.Data.Events;
+using Archeus.Battle.Events.Factory;
 
 namespace Archeus.Battle.Events.Resolvers
 {
     public static class DamageResolvedResolver
     {
-        public static void Resolve(ref BattleContext ctx, BattleEvent evt)
+        public static void Resolve(ref BattleContext ctx, BattleEvent evt, in EventEmissionContext emissionContext)
         {
             Entity target = evt.Target;
 
@@ -39,9 +40,7 @@ namespace Archeus.Battle.Events.Resolvers
                 Logging.Info(LogCategory.Combat, $"[Health Update] Entity {target.Index}: " + $"{oldHp} -> {hp.Value} (-{damageToApply}) | " +$"Current HP: {hpPercent:F1}%");
             }
 
-            ctx.ChainBuffer.Add(new ChainedBattleEvent
-            {
-                Event = new BattleEvent
+            BattleEvent damageAppliedEvent = new BattleEvent
                 {
                     Type = BattleEventType.DamageApplied,
                     Scope = evt.Scope,
@@ -59,8 +58,10 @@ namespace Archeus.Battle.Events.Resolvers
                         }
                     },
                     StructuralData = evt.StructuralData
-                }
-            });
+                };
+            
+            BattleEventEmitter.EmitContinuationEvent(damageAppliedEvent, ref ctx.ChainedEventQueue, in emissionContext);
+
         }
     }
 }

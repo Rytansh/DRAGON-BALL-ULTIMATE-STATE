@@ -10,16 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 90bf8690acea5c94ab7279a17b329ec0, type: 3}
-  m_Name: IncreaseAttack20Percent
+  m_Name: TestAOEAttack
   m_EditorClassIdentifier: 
-  ID: IncreaseAttack20Percent
-  Source: 'SelectTarget Self
+  ID: TestAOEAttack
+  Source: 'PushConst 2
 
-    PushConst -1
+    PushConst 2
 
-    PushConst 20
+    Mul
 
-    ApplyEffect
-    IncreaseAttackStackable
+    SelectTarget AllEnemies
+
+    DealDamage
 
     End'
