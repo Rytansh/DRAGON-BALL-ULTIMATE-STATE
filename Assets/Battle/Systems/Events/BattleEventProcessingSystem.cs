@@ -1,8 +1,10 @@
 using Archeus.Battle.Buffers.Combat;
 using Archeus.Battle.Buffers.Events;
+using Archeus.Battle.Buffers.Presentation;
 using Archeus.Battle.Buffers.VM;
 using Archeus.Battle.Components.Core;
 using Archeus.Battle.Components.Ownership;
+using Archeus.Battle.Components.Presentation;
 using Archeus.Battle.Components.Stats;
 using Archeus.Battle.Components.Tags;
 using Archeus.Battle.Data.Events;
@@ -24,6 +26,7 @@ namespace Archeus.Battle.Systems.Events
         private ComponentLookup<CharacterStats> characterStatsLookup;
         private ComponentLookup<CurrentHealth> characterHPLookup;
         private ComponentLookup<BattleRNG> battleRNGLookup;
+        private ComponentLookup<CardRuntimeID> cardRuntimeIDLookup;
 
         private BufferLookup<BehaviourRuntimeState> behaviourStateLookup;
         private BufferLookup<ActiveEffect> activeEffectsLookup;
@@ -36,6 +39,7 @@ namespace Archeus.Battle.Systems.Events
             characterStatsLookup = state.GetComponentLookup<CharacterStats>(true);
             characterHPLookup = state.GetComponentLookup<CurrentHealth>();
             battleRNGLookup = state.GetComponentLookup<BattleRNG>();
+            cardRuntimeIDLookup = state.GetComponentLookup<CardRuntimeID>(true);
             behaviourStateLookup = state.GetBufferLookup<BehaviourRuntimeState>();
             activeEffectsLookup = state.GetBufferLookup<ActiveEffect>();
             participantLookup = state.GetBufferLookup<BattleParticipant>();
@@ -47,6 +51,7 @@ namespace Archeus.Battle.Systems.Events
             characterStatsLookup.Update(ref state);
             characterHPLookup.Update(ref state);
             battleRNGLookup.Update(ref state);
+            cardRuntimeIDLookup.Update(ref state);
             behaviourStateLookup.Update(ref state);
             activeEffectsLookup.Update(ref state);
             participantLookup.Update(ref state);
@@ -77,24 +82,60 @@ namespace Archeus.Battle.Systems.Events
                 )
                     continue;
                 if (!SystemAPI.HasComponent<BattleContentRegistry>(battle))
+                {
+                    Logging.Warn(LogCategory.System, "Missing Battle Content registry.");
                     continue;
+                }
                 if (!participantLookup.HasBuffer(battle))
+                {
+                    Logging.Warn(LogCategory.System, "Missing Participant lookup buffer.");
                     continue;
+                }
+                if (!SystemAPI.HasBuffer<PresentationFact>(battle))
+                {
+                    Logging.Warn(LogCategory.System, "Missing Presentation Fact buffer.");
+                    continue;
+                }
+
+                if (!SystemAPI.HasComponent<PresentationSequenceCounter>(battle))
+                {
+                    Logging.Warn(LogCategory.System, "Missing Presentation Sequence Counter.");
+                    continue;
+                }
+
+                if (!SystemAPI.HasComponent<BattleID>(battle))
+                {
+                    Logging.Warn(LogCategory.System, "Missing Battle ID.");
+                    continue;
+                }
 
                 BlobAssetReference<ContentBlobRegistry> battleRegistryReference = SystemAPI
                     .GetComponent<BattleContentRegistry>(battle)
                     .BattleRegistryReference;
                 DynamicBuffer<BattleParticipant> participants = participantLookup[battle];
+                DynamicBuffer<PresentationFact> presentationFactQueue =
+                    SystemAPI.GetBuffer<PresentationFact>(battle);
+
+                RefRW<PresentationSequenceCounter> presentationSequenceCounter =
+                    SystemAPI.GetComponentRW<PresentationSequenceCounter>(battle);
+
+                ulong battleID = SystemAPI.GetComponent<BattleID>(battle).Value;
 
                 BattleContext ctx = new BattleContext
                 {
                     Battle = battle,
+                    BattleID = battleID,
 
                     ChainedEventQueue = chainedEventQueue,
+
+                    PresentationFactQueue = presentationFactQueue,
+                    PresentationSequenceCounter = presentationSequenceCounter,
 
                     StatsLookup = characterStatsLookup,
                     HealthLookup = characterHPLookup,
                     RNGLookup = battleRNGLookup,
+
+                    CardRuntimeIDLookup = cardRuntimeIDLookup,
                     EffectLookup = activeEffectsLookup,
 
                     Participants = participants,
@@ -442,7 +483,6 @@ namespace Archeus.Battle.Systems.Events
                         EventEmissionContext emissionContext = new EventEmissionContext
                         {
                             StructuralData = frame.Event.StructuralData,
-
                             CurrentFrameID = frame.ID,
                         };
 

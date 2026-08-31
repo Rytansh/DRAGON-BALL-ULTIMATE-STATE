@@ -1,31 +1,37 @@
-using Unity.Entities;
-using Archeus.Battle.Buffers.Events;
 using Archeus.Battle.Buffers.Combat;
-using Archeus.Battle.Components.Stats;
-using Archeus.Battle.Components.Ownership;
-using Archeus.Content.Registries;
-using Archeus.Battle.Components.Core;
+using Archeus.Battle.Buffers.Events;
 using Archeus.Battle.Buffers.Presentation;
+using Archeus.Battle.Components.Core;
+using Archeus.Battle.Components.Ownership;
+using Archeus.Battle.Components.Presentation;
+using Archeus.Battle.Components.Stats;
+using Archeus.Content.Registries;
+using Unity.Entities;
 
 namespace Archeus.Battle.Events.Context
 {
     public struct BattleContext
     {
         public Entity Battle;
+        public ulong BattleID;
 
-        // Specific resources belonging to THIS battle
+        // Battle-owned event resources
         public DynamicBuffer<ChainedBattleEvent> ChainedEventQueue;
-        public DynamicBuffer<PresentationFact> PresentationFacts;
         public DynamicBuffer<BattleParticipant> Participants;
 
-        // Entity-indexed access to runtime data
+        // Battle-owned presentation resources
+        public DynamicBuffer<PresentationFact> PresentationFactQueue;
+        public RefRW<PresentationSequenceCounter> PresentationSequenceCounter;
+
+        // Entity-indexed runtime data
         public ComponentLookup<CharacterStats> StatsLookup;
         public ComponentLookup<CurrentHealth> HealthLookup;
         public ComponentLookup<Team> TeamLookup;
+        public ComponentLookup<CardRuntimeID> CardRuntimeIDLookup;
 
         public BufferLookup<ActiveEffect> EffectLookup;
 
-        // Battle-specific data accessed through entity
+        // Battle-specific runtime data
         public ComponentLookup<BattleRNG> RNGLookup;
 
         public BlobAssetReference<ContentBlobRegistry> BattleRegistryReference;

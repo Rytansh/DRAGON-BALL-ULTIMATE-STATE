@@ -1,13 +1,13 @@
-using Unity.Entities;
-using Unity.Collections;
 using Archeus.Battle.Components.Combat;
+using Archeus.Battle.Components.Ownership;
 using Archeus.Battle.Components.Requests;
 using Archeus.Battle.Components.Stats;
-using Archeus.Battle.Components.Ownership;
 using Archeus.Battle.Components.Tags;
 using Archeus.Core.Debugging;
+using Unity.Collections;
+using Unity.Entities;
 
-namespace Archeus.Battle.Systems.Cards
+namespace Archeus.Battle.Systems.Presentation
 {
     [UpdateInGroup(typeof(PlanningStageGroup))]
     public partial struct TargetSelectionSystem : ISystem
@@ -16,23 +16,37 @@ namespace Archeus.Battle.Systems.Cards
         {
             EntityCommandBuffer ecb = new EntityCommandBuffer(Allocator.Temp);
 
-            foreach (var (request, requestEntity) in SystemAPI.Query<RefRO<CycleTargetRequest>>().WithEntityAccess())
+            foreach (
+                var (request, requestEntity) in SystemAPI
+                    .Query<RefRO<CycleTargetRequest>>()
+                    .WithEntityAccess()
+            )
             {
                 Entity player = request.ValueRO.Player;
 
-                if (!SystemAPI.HasComponent<SelectedTarget>(player) || !SystemAPI.HasComponent<Team>(player))
+                if (
+                    !SystemAPI.HasComponent<SelectedTarget>(player)
+                    || !SystemAPI.HasComponent<Team>(player)
+                )
                 {
                     ecb.DestroyEntity(requestEntity);
                     continue;
                 }
 
                 Team playerTeam = SystemAPI.GetComponent<Team>(player);
-                RefRW<SelectedTarget> selectedTarget = SystemAPI.GetComponentRW<SelectedTarget>(player);
+                RefRW<SelectedTarget> selectedTarget = SystemAPI.GetComponentRW<SelectedTarget>(
+                    player
+                );
 
                 NativeList<Entity> validTargets = new NativeList<Entity>(Allocator.Temp);
 
                 // COLLECT VALID ENEMY TARGETS
-                foreach (var (team, hp, entity) in SystemAPI.Query<RefRO<Team>, RefRO<CurrentHealth>>().WithAll<CharacterTag>().WithEntityAccess())
+                foreach (
+                    var (team, hp, entity) in SystemAPI
+                        .Query<RefRO<Team>, RefRO<CurrentHealth>>()
+                        .WithAll<CharacterTag>()
+                        .WithEntityAccess()
+                )
                 {
                     // Ignore same-team entities
                     if (team.ValueRO.Side == playerTeam.Side)
@@ -84,29 +98,45 @@ namespace Archeus.Battle.Systems.Cards
                 }
 
                 selectedTarget.ValueRW.Value = validTargets[currentIndex];
-                Logging.Info(LogCategory.Testing, $"Selected target is {selectedTarget.ValueRW.Value.Index}");
+                Logging.Info(
+                    LogCategory.Presentation,
+                    $"Selected target is {selectedTarget.ValueRW.Value.Index}"
+                );
 
                 validTargets.Dispose();
                 ecb.DestroyEntity(requestEntity);
             }
 
-            foreach (var (request, requestEntity) in SystemAPI.Query<RefRO<CycleCharacterRequest>>().WithEntityAccess())
+            foreach (
+                var (request, requestEntity) in SystemAPI
+                    .Query<RefRO<CycleCharacterRequest>>()
+                    .WithEntityAccess()
+            )
             {
                 Entity player = request.ValueRO.Player;
 
-                if (!SystemAPI.HasComponent<SelectedCharacter>(player) || !SystemAPI.HasComponent<Team>(player))
+                if (
+                    !SystemAPI.HasComponent<SelectedCharacter>(player)
+                    || !SystemAPI.HasComponent<Team>(player)
+                )
                 {
                     ecb.DestroyEntity(requestEntity);
                     continue;
                 }
 
                 Team playerTeam = SystemAPI.GetComponent<Team>(player);
-                RefRW<SelectedCharacter> selectedTarget = SystemAPI.GetComponentRW<SelectedCharacter>(player);
+                RefRW<SelectedCharacter> selectedTarget =
+                    SystemAPI.GetComponentRW<SelectedCharacter>(player);
 
                 NativeList<Entity> validTargets = new NativeList<Entity>(Allocator.Temp);
 
                 // COLLECT VALID ENEMY TARGETS
-                foreach (var (team, hp, entity) in SystemAPI.Query<RefRO<Team>, RefRO<CurrentHealth>>().WithAll<CharacterTag>().WithEntityAccess())
+                foreach (
+                    var (team, hp, entity) in SystemAPI
+                        .Query<RefRO<Team>, RefRO<CurrentHealth>>()
+                        .WithAll<CharacterTag>()
+                        .WithEntityAccess()
+                )
                 {
                     if (team.ValueRO.Side != playerTeam.Side)
                         continue;
@@ -156,7 +186,10 @@ namespace Archeus.Battle.Systems.Cards
                 }
 
                 selectedTarget.ValueRW.Value = validTargets[currentIndex];
-                Logging.Info(LogCategory.Testing, $"Selected character is {selectedTarget.ValueRW.Value.Index}");
+                Logging.Info(
+                    LogCategory.Presentation,
+                    $"Selected character is {selectedTarget.ValueRW.Value.Index}"
+                );
 
                 validTargets.Dispose();
                 ecb.DestroyEntity(requestEntity);

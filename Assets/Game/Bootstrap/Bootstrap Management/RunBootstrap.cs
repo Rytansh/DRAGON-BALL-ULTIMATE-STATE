@@ -1,7 +1,6 @@
-using UnityEngine;
-using Unity.Entities;
 using Archeus.Core.Debugging;
-using System.Collections.Generic;
+using Unity.Entities;
+using UnityEngine;
 
 namespace Archeus.Game.Bootstrap
 {
@@ -18,13 +17,14 @@ namespace Archeus.Game.Bootstrap
         {
             if (autoRun)
                 Run();
-            
+
             DontDestroyOnLoad(gameObject);
         }
 
         public void Run()
         {
             Logging.DisableCategory(LogCategory.VM);
+            Logging.DisableCategory(LogCategory.Testing);
             bootstrapEntry = new BattleBootstrapEntry();
 
             try

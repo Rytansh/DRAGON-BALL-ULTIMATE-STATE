@@ -38,9 +38,3 @@ MonoBehaviour:
     VMProgramID: ResetTriggerTurnStart
     Priority: 0
     Conditions: []
-  - EventType: 14
-    Phase: 2
-    OwnerType: 1
-    VMProgramID: IncreaseAttack20Percent
-    Priority: 0
-    Conditions: []
