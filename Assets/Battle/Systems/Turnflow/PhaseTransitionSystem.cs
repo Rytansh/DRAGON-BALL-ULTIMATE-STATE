@@ -1,10 +1,11 @@
-using Unity.Entities;
-using Unity.Collections;
-using Archeus.Battle.Components.Tags;
 using Archeus.Battle.Components.Core;
+using Archeus.Battle.Components.Tags;
+using Unity.Collections;
+using Unity.Entities;
 
 namespace Archeus.Battle.Systems.Turnflow
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(BattleRootGroup))]
     [UpdateAfter(typeof(BattleSimulationGroup))]
     public partial struct BattlePhaseTransitionSystem : ISystem
@@ -13,7 +14,12 @@ namespace Archeus.Battle.Systems.Turnflow
         {
             EntityCommandBuffer ecb = new EntityCommandBuffer(Allocator.Temp);
 
-            foreach (var (battleState, battle) in SystemAPI.Query<RefRW<BattleState>>().WithAll<BattleTag>().WithEntityAccess())
+            foreach (
+                var (battleState, battle) in SystemAPI
+                    .Query<RefRW<BattleState>>()
+                    .WithAll<BattleTag>()
+                    .WithEntityAccess()
+            )
             {
                 switch (battleState.ValueRO.Phase)
                 {

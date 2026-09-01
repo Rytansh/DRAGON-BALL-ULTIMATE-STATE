@@ -1,22 +1,35 @@
-using Unity.Entities;
-using Unity.Collections;
-using Archeus.Battle.Components.Tags;
-using Archeus.Battle.Components.Requests;
 using Archeus.Battle.Components.Core;
+using Archeus.Battle.Components.Requests;
+using Archeus.Battle.Components.Tags;
+using Unity.Collections;
+using Unity.Entities;
 
 namespace Archeus.Battle.Systems.Setup
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(BattleSpawningGroup))]
     public partial struct BattleSpawnCompletionSystem : ISystem
     {
         public void OnUpdate(ref SystemState state)
         {
-            bool spawnRequestsExist = SystemAPI.QueryBuilder().WithAll<SpawnCharacterRequest>().Build().CalculateEntityCount() > 0;
-            if (spawnRequestsExist) return;
+            bool spawnRequestsExist =
+                SystemAPI
+                    .QueryBuilder()
+                    .WithAll<SpawnCharacterRequest>()
+                    .Build()
+                    .CalculateEntityCount() > 0;
+            if (spawnRequestsExist)
+                return;
 
             EntityCommandBuffer ecb = new EntityCommandBuffer(Allocator.Temp);
 
-            foreach (var (battleState, battle)in SystemAPI.Query<RefRO<BattleState>>().WithAll<BattleTag>().WithNone<BattleSpawningCompleteTag>().WithEntityAccess())
+            foreach (
+                var (battleState, battle) in SystemAPI
+                    .Query<RefRO<BattleState>>()
+                    .WithAll<BattleTag>()
+                    .WithNone<BattleSpawningCompleteTag>()
+                    .WithEntityAccess()
+            )
             {
                 if (battleState.ValueRO.Phase != BattlePhase.Spawning)
                     continue;
@@ -30,5 +43,3 @@ namespace Archeus.Battle.Systems.Setup
         }
     }
 }
-
-

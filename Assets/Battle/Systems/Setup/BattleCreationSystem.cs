@@ -17,6 +17,7 @@ using UnityEngine.UIElements.Experimental;
 
 namespace Archeus.Battle.Systems.Setup
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(BattleCreationGroup))]
     public partial struct BattleCreationSystem : ISystem
     {

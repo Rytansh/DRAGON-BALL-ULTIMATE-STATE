@@ -23,8 +23,6 @@ namespace Archeus.Game.Bootstrap
 
         public void Run()
         {
-            Logging.DisableCategory(LogCategory.VM);
-            Logging.DisableCategory(LogCategory.Testing);
             bootstrapEntry = new BattleBootstrapEntry();
 
             try
