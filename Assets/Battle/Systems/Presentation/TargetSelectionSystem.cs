@@ -9,6 +9,7 @@ using Unity.Entities;
 
 namespace Archeus.Battle.Systems.Presentation
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(PlanningStageGroup))]
     public partial struct TargetSelectionSystem : ISystem
     {

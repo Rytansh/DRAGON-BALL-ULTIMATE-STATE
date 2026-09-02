@@ -5,6 +5,7 @@ using Unity.Entities;
 
 namespace Archeus.Content.Lookup
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct ContentLookupSystem : ISystem
     {

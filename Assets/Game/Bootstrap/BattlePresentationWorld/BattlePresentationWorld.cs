@@ -2,12 +2,12 @@ using Archeus.Core.Debugging;
 
 namespace Archeus.Game.Bootstrap
 {
-    public sealed class PresentationWorld
+    public sealed class BattlePresentationWorld
     {
         public WorldContext localContext { get; private set; }
         private readonly WorldContext rootContext;
 
-        public PresentationWorld(WorldContext rootContext)
+        public BattlePresentationWorld(WorldContext rootContext)
         {
             this.rootContext = rootContext;
         }
@@ -19,14 +19,13 @@ namespace Archeus.Game.Bootstrap
             IConfigProvider rootConfigProvider = rootContext.Resolve<IConfigProvider>();
             localContext.Register<IConfigProvider>(rootConfigProvider);
 
-            Logging.Info(LogCategory.Setup,"PresentationWorld context created.");
+            Logging.Info(LogCategory.Setup, "PresentationWorld context created.");
         }
 
         public void Dispose()
         {
             // cleanup logic later
-            Logging.Info(LogCategory.Setup,"PresentationWorld disposed.");
+            Logging.Info(LogCategory.Setup, "PresentationWorld disposed.");
         }
     }
 }
-

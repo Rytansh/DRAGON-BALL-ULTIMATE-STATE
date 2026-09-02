@@ -7,7 +7,7 @@ namespace Archeus.Game.Bootstrap
     public class RunBootstrap : MonoBehaviour
     {
         public static WorldContext RootContext { get; private set; }
-        private BattleBootstrapEntry bootstrapEntry;
+        private GameBootstrapEntry bootstrapEntry;
 
         [Header("Bootstrap Settings")]
         [Tooltip("Run bootstrap on Awake automatically.")]
@@ -23,12 +23,12 @@ namespace Archeus.Game.Bootstrap
 
         public void Run()
         {
-            bootstrapEntry = new BattleBootstrapEntry();
+            bootstrapEntry = new GameBootstrapEntry();
 
             try
             {
                 bootstrapEntry.Initialise();
-                RootContext = bootstrapEntry.getRootContext();
+                RootContext = bootstrapEntry.GetRootContext();
 
                 World ecsWorld = World.DefaultGameObjectInjectionWorld;
 

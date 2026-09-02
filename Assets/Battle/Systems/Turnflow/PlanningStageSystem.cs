@@ -1,26 +1,27 @@
-using Unity.Entities;
-using Unity.Collections;
-using Archeus.Battle.Components.Tags;
-using Archeus.Battle.Components.Requests;
+using Archeus.Battle.Buffers.Events;
 using Archeus.Battle.Components.Combat;
-using Archeus.Battle.Components.Turns;
 using Archeus.Battle.Components.Core;
 using Archeus.Battle.Components.Ownership;
-using Archeus.Battle.Events.Payloads;
-using Archeus.Battle.Buffers.Events;
-using Archeus.Core.Debugging;
+using Archeus.Battle.Components.Requests;
+using Archeus.Battle.Components.Tags;
+using Archeus.Battle.Components.Turns;
 using Archeus.Battle.Data.Events;
 using Archeus.Battle.Events.Factory;
+using Archeus.Battle.Events.Payloads;
+using Archeus.Core.Debugging;
+using Unity.Collections;
+using Unity.Entities;
 
 namespace Archeus.Battle.Systems.Turnflow
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(PlanningStageGroup))]
     public partial struct PlanningStageSystem : ISystem
     {
         public void OnUpdate(ref SystemState state)
         {
             EntityCommandBuffer ecb = new EntityCommandBuffer(Allocator.Temp);
-            
+
             ProcessPlaceCardRequest(ref state, ecb);
             ProcessPlayActionRequest(ref state, ecb);
             ProcessEndPlanningRequest(ref state, ecb);
@@ -33,11 +34,21 @@ namespace Archeus.Battle.Systems.Turnflow
 
         private void ProcessPlaceCardRequest(ref SystemState state, EntityCommandBuffer ecb)
         {
-            foreach (var (request, requestEntity) in SystemAPI.Query<RefRO<PlaceCardRequest>>().WithEntityAccess())
+            foreach (
+                var (request, requestEntity) in SystemAPI
+                    .Query<RefRO<PlaceCardRequest>>()
+                    .WithEntityAccess()
+            )
             {
                 var player = request.ValueRO.Player;
 
-                if (!SystemAPI.HasComponent<PlayerHand>(player) || !SystemAPI.HasComponent<RemainingActionPoints>(player) || !SystemAPI.HasComponent<SelectedTarget>(player) || !SystemAPI.HasComponent<SelectedCharacter>(player) || !TryPlanningBattle(ref state, player, out var battle))
+                if (
+                    !SystemAPI.HasComponent<PlayerHand>(player)
+                    || !SystemAPI.HasComponent<RemainingActionPoints>(player)
+                    || !SystemAPI.HasComponent<SelectedTarget>(player)
+                    || !SystemAPI.HasComponent<SelectedCharacter>(player)
+                    || !TryPlanningBattle(ref state, player, out var battle)
+                )
                 {
                     ecb.DestroyEntity(requestEntity);
                     continue;
@@ -51,7 +62,9 @@ namespace Archeus.Battle.Systems.Turnflow
                     continue;
                 }
 
-                SelectedCharacter selectedCharacter = SystemAPI.GetComponent<SelectedCharacter>(player);
+                SelectedCharacter selectedCharacter = SystemAPI.GetComponent<SelectedCharacter>(
+                    player
+                );
 
                 if (selectedCharacter.Value == Entity.Null)
                 {
@@ -60,10 +73,11 @@ namespace Archeus.Battle.Systems.Turnflow
                 }
 
                 var eventBuffer = SystemAPI.GetBuffer<BattleEvent>(battle);
-                RefRW<BattleEventGroupIDCounter> groupCounter = SystemAPI.GetComponentRW<BattleEventGroupIDCounter>(battle);
+                RefRW<BattleEventGroupIDCounter> groupCounter =
+                    SystemAPI.GetComponentRW<BattleEventGroupIDCounter>(battle);
 
                 BattleEventEmitter.EmitOriginEvent(
-                new BattleEvent
+                    new BattleEvent
                     {
                         Type = BattleEventType.TestEvent,
                         Scope = BattleEventScope.Targeted,
@@ -71,14 +85,11 @@ namespace Archeus.Battle.Systems.Turnflow
                         Target = selectedTarget.Value,
                         Payload = new EventPayload
                         {
-                            Damage = new DamagePayload
-                            {
-                                AttackMultiplier = 1.0f
-                            }
-                        }
+                            Damage = new DamagePayload { AttackMultiplier = 1.0f },
+                        },
                     },
-                ref eventBuffer,
-                groupCounter
+                    ref eventBuffer,
+                    groupCounter
                 );
 
                 ecb.DestroyEntity(requestEntity);
@@ -87,32 +98,42 @@ namespace Archeus.Battle.Systems.Turnflow
 
         private void ProcessPlayActionRequest(ref SystemState state, EntityCommandBuffer ecb)
         {
-            foreach (var (request, requestEntity)
-            in SystemAPI.Query<RefRO<PlayActionRequest>>()
-                        .WithEntityAccess())
+            foreach (
+                var (request, requestEntity) in SystemAPI
+                    .Query<RefRO<PlayActionRequest>>()
+                    .WithEntityAccess()
+            )
             {
                 var player = request.ValueRO.Player;
                 Logging.Info(LogCategory.Testing, "reached");
 
-                if (!SystemAPI.HasComponent<RemainingActionPoints>(player) || !TryPlanningBattle(ref state, player, out var battle))
+                if (
+                    !SystemAPI.HasComponent<RemainingActionPoints>(player)
+                    || !TryPlanningBattle(ref state, player, out var battle)
+                )
                 {
                     ecb.DestroyEntity(requestEntity);
                     continue;
                 }
 
-
                 ecb.DestroyEntity(requestEntity);
             }
         }
+
         private void ProcessEndPlanningRequest(ref SystemState state, EntityCommandBuffer ecb)
         {
-            foreach (var (request, requestEntity)
-            in SystemAPI.Query<RefRO<EndPlanningRequest>>()
-                        .WithEntityAccess())
+            foreach (
+                var (request, requestEntity) in SystemAPI
+                    .Query<RefRO<EndPlanningRequest>>()
+                    .WithEntityAccess()
+            )
             {
                 var player = request.ValueRO.Player;
 
-                if (!TryPlanningBattle(ref state, player, out var battle) || SystemAPI.HasComponent<BattlePlanningCompleteTag>(battle))
+                if (
+                    !TryPlanningBattle(ref state, player, out var battle)
+                    || SystemAPI.HasComponent<BattlePlanningCompleteTag>(battle)
+                )
                 {
                     ecb.DestroyEntity(requestEntity);
                     continue;
@@ -140,6 +161,5 @@ namespace Archeus.Battle.Systems.Turnflow
 
             return battleState.Phase == BattlePhase.Planning;
         }
-
     }
 }

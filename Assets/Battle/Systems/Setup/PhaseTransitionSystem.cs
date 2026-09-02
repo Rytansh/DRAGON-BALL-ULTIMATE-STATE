@@ -3,7 +3,7 @@ using Archeus.Battle.Components.Tags;
 using Unity.Collections;
 using Unity.Entities;
 
-namespace Archeus.Battle.Systems.Turnflow
+namespace Archeus.Battle.Systems.Setup
 {
     [DisableAutoCreation]
     [UpdateInGroup(typeof(BattleRootGroup))]

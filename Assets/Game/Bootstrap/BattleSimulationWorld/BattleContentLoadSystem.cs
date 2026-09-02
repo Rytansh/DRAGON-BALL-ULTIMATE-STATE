@@ -1,13 +1,13 @@
 using Archeus.Content.Registries;
+using Archeus.Core.Debugging;
 using Unity.Entities;
 using Unity.Scenes;
-using UnityEngine;
 
 namespace Archeus.Game.Bootstrap
 {
     [DisableAutoCreation]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
-    public partial struct SimulationContentLoadSystem : ISystem
+    public partial struct BattleContentLoadSystem : ISystem
     {
         private bool loadRequested;
         private Entity gameConfigSceneEntity;
@@ -25,8 +25,6 @@ namespace Archeus.Game.Bootstrap
 
                 loadRequested = true;
 
-                Debug.Log("[Simulation Content] GameConfig load requested.");
-
                 return;
             }
 
@@ -37,8 +35,9 @@ namespace Archeus.Game.Bootstrap
 
             bool registryExists = SystemAPI.HasSingleton<ContentBlobRegistryComponent>();
 
-            Debug.Log(
-                $"[Simulation Content] GameConfig loaded. " + $"Registry found: {registryExists}"
+            Logging.Info(
+                LogCategory.Testing,
+                $"GameConfig loaded. " + $"Registry found: {registryExists}"
             );
 
             state.Enabled = false;

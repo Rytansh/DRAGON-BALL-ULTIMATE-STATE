@@ -129,6 +129,7 @@ GameObject:
   m_Component:
   - component: {fileID: 100653413}
   - component: {fileID: 100653414}
+  - component: {fileID: 100653415}
   m_Layer: 0
   m_Name: BattleEntryPoint
   m_TagString: Untagged
@@ -161,6 +162,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 327435bda5072e04d89f3ea7ca7d342d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &100653415
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100653411}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3f4ca0c8a151144998f74b946912d10, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &179166818

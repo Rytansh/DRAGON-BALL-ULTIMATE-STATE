@@ -24,6 +24,7 @@ namespace Archeus.Battle.Systems.Setup
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<StartBattleRequest>();
+            state.RequireForUpdate<BattleContentReadyTag>();
         }
 
         public void OnUpdate(ref SystemState state)

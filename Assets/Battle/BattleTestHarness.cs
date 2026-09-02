@@ -7,7 +7,7 @@ public class BattleTestHarness : MonoBehaviour
 {
     void Start()
     {
-        var world = ArcheusSimulationBootstrap.SimulationEcsWorld.EntityManager;
+        var world = BattleSimulationBootstrap.SimulationEcsWorld.EntityManager;
 
         ISeedService seedService = RunBootstrap.RootContext.Resolve<ISeedService>();
 

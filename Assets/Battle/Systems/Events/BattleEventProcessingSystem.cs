@@ -18,6 +18,7 @@ using Unity.Entities;
 
 namespace Archeus.Battle.Systems.Events
 {
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(BattleSimulationGroup))]
     public partial struct BattleEventProcessingSystem : ISystem
     {

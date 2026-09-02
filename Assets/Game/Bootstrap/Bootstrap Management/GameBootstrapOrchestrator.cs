@@ -6,12 +6,11 @@ using Archeus.Core.Debugging;
 
 namespace Archeus.Game.Bootstrap
 {
-    public sealed class BattleBootstrapOrchestrator
+    public sealed class GameBootstrapOrchestrator
     {
         private readonly List<IBootstrapProcess> processInitialisers = new();
 
-        public void Register(IBootstrapProcess initialiser)
-            => processInitialisers.Add(initialiser);
+        public void Register(IBootstrapProcess initialiser) => processInitialisers.Add(initialiser);
 
         public void InitialiseAll(WorldContext context)
         {
@@ -26,12 +25,18 @@ namespace Archeus.Game.Bootstrap
                     process.Initialise(context);
                     processTimer.Stop();
 
-                    Logging.Info(LogCategory.Setup, $" ✓ {processName} initialised successfully ({processTimer.ElapsedMilliseconds} ms).");
+                    Logging.Info(
+                        LogCategory.Setup,
+                        $" ✓ {processName} initialised successfully ({processTimer.ElapsedMilliseconds} ms)."
+                    );
                 }
                 catch (Exception ex)
                 {
                     processTimer.Stop();
-                    Logging.Error(LogCategory.Setup, $"[Bootstrap] ✗ Failed to initialise {processName} ({processTimer.ElapsedMilliseconds} ms). Exception: {ex.Message}");
+                    Logging.Error(
+                        LogCategory.Setup,
+                        $"[Bootstrap] ✗ Failed to initialise {processName} ({processTimer.ElapsedMilliseconds} ms). Exception: {ex.Message}"
+                    );
                     UnityEngine.Debug.Log(ex);
 
                     // Optionally: decide whether to continue or abort bootstrapping
@@ -39,8 +44,10 @@ namespace Archeus.Game.Bootstrap
                 }
             }
             bootstrapTime.Stop();
-            Logging.Info(LogCategory.Setup, $"[Bootstrap] All processes attempted. Bootstrapping complete ({bootstrapTime.ElapsedMilliseconds} ms).");
+            Logging.Info(
+                LogCategory.Setup,
+                $"[Bootstrap] All processes attempted. Bootstrapping complete ({bootstrapTime.ElapsedMilliseconds} ms)."
+            );
         }
     }
 }
-
