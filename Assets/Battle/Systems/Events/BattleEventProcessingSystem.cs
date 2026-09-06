@@ -1,3 +1,4 @@
+using Archeus.Battle.Buffers.Actions;
 using Archeus.Battle.Buffers.Combat;
 using Archeus.Battle.Buffers.Events;
 using Archeus.Battle.Buffers.Presentation;
@@ -116,9 +117,12 @@ namespace Archeus.Battle.Systems.Events
                 DynamicBuffer<BattleParticipant> participants = participantLookup[battle];
                 DynamicBuffer<PresentationFact> presentationFactQueue =
                     SystemAPI.GetBuffer<PresentationFact>(battle);
-
+                DynamicBuffer<ActionExecutionState> actionExecutionStates =
+                    SystemAPI.GetBuffer<ActionExecutionState>(battle);
                 RefRW<PresentationSequenceCounter> presentationSequenceCounter =
                     SystemAPI.GetComponentRW<PresentationSequenceCounter>(battle);
+                RefRW<BattleOperationIDCounter> operationCounter =
+                    SystemAPI.GetComponentRW<BattleOperationIDCounter>(battle);
 
                 ulong battleID = SystemAPI.GetComponent<BattleID>(battle).Value;
 
@@ -128,6 +132,8 @@ namespace Archeus.Battle.Systems.Events
                     BattleID = battleID,
 
                     ChainedEventQueue = chainedEventQueue,
+                    ActionExecutionStates = actionExecutionStates,
+                    OperationCounter = operationCounter,
 
                     PresentationFactQueue = presentationFactQueue,
                     PresentationSequenceCounter = presentationSequenceCounter,
@@ -146,6 +152,8 @@ namespace Archeus.Battle.Systems.Events
                 };
 
                 NativeList<EventFrame> eventFrames = new NativeList<EventFrame>(64, Allocator.Temp);
+                NativeList<AbilityExecutionContinuation> continuations =
+                    new NativeList<AbilityExecutionContinuation>(16, Allocator.Temp);
 
                 SeedRootFrames(mainEventQueue, ref eventFrames, frameIDCounter);
 
@@ -155,6 +163,20 @@ namespace Archeus.Battle.Systems.Events
                 while (true)
                 {
                     PromoteChainedEvents(chainedEventQueue, ref eventFrames, frameIDCounter);
+
+                    if (
+                        TryResumeReadyContinuation(
+                            ref continuations,
+                            ref eventFrames,
+                            chainedEventQueue,
+                            executionRequestQueue,
+                            ref ctx
+                        )
+                    )
+                    {
+                        continue;
+                    }
+
                     if (
                         !TryGetLowestActiveGeneration(
                             in eventFrames,
@@ -163,6 +185,15 @@ namespace Archeus.Battle.Systems.Events
                         )
                     )
                     {
+                        if (continuations.Length > 0)
+                        {
+                            Logging.Warn(
+                                LogCategory.Event,
+                                "[Scheduler] No runnable event work exists "
+                                    + "but VM continuations are still waiting."
+                            );
+                        }
+
                         break;
                     }
 
@@ -172,7 +203,7 @@ namespace Archeus.Battle.Systems.Events
 
                         Logging.Info(
                             LogCategory.Event,
-                            $"[GENERATION] Processing generation " + $"{activeGeneration}."
+                            $"Processing generation " + $"{activeGeneration}."
                         );
                     }
 
@@ -192,17 +223,20 @@ namespace Archeus.Battle.Systems.Events
 
                     int requestIndex = FindBestExecutionRequestIndex(
                         executionRequestQueue,
+                        in eventFrames,
                         activeGeneration
                     );
 
                     if (requestIndex >= 0)
                     {
                         BehaviourExecutionRequest request = executionRequestQueue[requestIndex];
-
                         executionRequestQueue.RemoveAt(requestIndex);
-
-                        ExecuteBehaviourRequest(request, ref eventFrames, ref ctx);
-
+                        ExecuteBehaviourRequest(
+                            request,
+                            ref eventFrames,
+                            ref continuations,
+                            ref ctx
+                        );
                         continue;
                     }
 
@@ -228,6 +262,7 @@ namespace Archeus.Battle.Systems.Events
                     ProcessFrameStep(ref state, ref ctx, ref frame, executionRequestQueue);
                 }
 
+                continuations.Dispose();
                 eventFrames.Dispose();
             }
         }
@@ -243,12 +278,9 @@ namespace Archeus.Battle.Systems.Events
                 EventFrame rootFrame = new EventFrame
                 {
                     ID = RetrieveNextFrameID(frameIDCounter),
-
                     Event = mainEventQueue[i],
-
                     Phase = BattleEventPhase.PreResolution,
                     PhaseStarted = false,
-
                     Completed = false,
                 };
 
@@ -267,29 +299,20 @@ namespace Archeus.Battle.Systems.Events
             RefRW<BattleEventFrameIDCounter> frameIDCounter
         )
         {
-            for (int i = 0; i < chainedEventQueue.Length; i++)
+            for (int i = chainedEventQueue.Length - 1; i >= 0; i--)
             {
                 BattleEvent evt = chainedEventQueue[i].Event;
 
                 EventFrame chainedFrame = new EventFrame
                 {
                     ID = RetrieveNextFrameID(frameIDCounter),
-
                     Event = evt,
-
                     Phase = BattleEventPhase.PreResolution,
-
                     PhaseStarted = false,
-
                     Completed = false,
                 };
 
                 ValidateFrame(in chainedFrame);
-                // LogFrameCreated(
-                //     "CHAIN",
-                //     in chainedFrame
-                // );
-
                 eventFrames.Add(chainedFrame);
             }
 
@@ -312,23 +335,28 @@ namespace Archeus.Battle.Systems.Events
 
                 if (frame.Completed)
                     continue;
+                if (frame.PendingVMContinuations > 0)
+                    continue;
 
                 ushort candidateGeneration = frame.Event.StructuralData.Generation;
 
                 if (!found || candidateGeneration < generation)
                 {
                     generation = candidateGeneration;
-
                     found = true;
                 }
             }
 
             for (int i = 0; i < executionRequestQueue.Length; i++)
             {
-                ushort candidateGeneration = executionRequestQueue[i]
-                    .EmissionContext
-                    .StructuralData
-                    .Generation;
+                BehaviourExecutionRequest request = executionRequestQueue[i];
+
+                if (IsExecutionRequestBlocked(in eventFrames, in request))
+                {
+                    continue;
+                }
+
+                ushort candidateGeneration = request.EmissionContext.StructuralData.Generation;
 
                 if (!found || candidateGeneration < generation)
                 {
@@ -351,6 +379,8 @@ namespace Archeus.Battle.Systems.Events
 
                 if (frame.Completed)
                     continue;
+                if (frame.PendingVMContinuations > 0)
+                    continue;
                 if (frame.Event.StructuralData.Generation != generation)
                     continue;
 
@@ -362,6 +392,7 @@ namespace Archeus.Battle.Systems.Events
 
         private int FindBestExecutionRequestIndex(
             DynamicBuffer<BehaviourExecutionRequest> executionRequestQueue,
+            in NativeList<EventFrame> eventFrames,
             ushort generation
         )
         {
@@ -372,6 +403,11 @@ namespace Archeus.Battle.Systems.Events
             for (int i = 0; i < executionRequestQueue.Length; i++)
             {
                 BehaviourExecutionRequest candidate = executionRequestQueue[i];
+
+                if (IsExecutionRequestBlocked(in eventFrames, in candidate))
+                {
+                    continue;
+                }
 
                 if (candidate.EmissionContext.StructuralData.Generation != generation)
                 {
@@ -398,6 +434,7 @@ namespace Archeus.Battle.Systems.Events
         private void ExecuteBehaviourRequest(
             BehaviourExecutionRequest request,
             ref NativeList<EventFrame> eventFrames,
+            ref NativeList<AbilityExecutionContinuation> continuations,
             ref BattleContext ctx
         )
         {
@@ -410,8 +447,7 @@ namespace Archeus.Battle.Systems.Events
             {
                 Logging.Warn(
                     LogCategory.Event,
-                    $"[Scheduler] Behaviour request could not "
-                        + $"find parent Frame "
+                    $"Behaviour request could not find parent Frame "
                         + $"{request.EmissionContext.CurrentFrameID}."
                 );
 
@@ -429,7 +465,37 @@ namespace Archeus.Battle.Systems.Events
 
             ref EventFrame parentFrame = ref eventFrames.ElementAt(parentFrameIndex);
 
-            BehaviourExecutor.Execute(request, ref parentFrame.Event, ref ctx, stateBuffer);
+            AbilityExecutionResult result = BehaviourExecutor.Execute(
+                request,
+                ref parentFrame.Event,
+                ref ctx,
+                stateBuffer,
+                out AbilityExecutionFrame executionFrame
+            );
+
+            if (result.Status == AbilityExecutionStatus.Yielded)
+            {
+                parentFrame.PendingVMContinuations++;
+
+                Logging.Info(
+                    LogCategory.Event,
+                    $"[VM SUSPEND] "
+                        + $"ParentFrame={parentFrame.ID} | "
+                        + $"ParentOperation={parentFrame.Event.ExecutionData.OperationID} | "
+                        + $"NewOperation={result.WaitingOperationID}"
+                );
+
+                continuations.Add(
+                    new AbilityExecutionContinuation
+                    {
+                        Frame = executionFrame,
+                        BehaviourStateIndex = request.RegistrationIndex,
+                        BaseEmissionContext = request.EmissionContext,
+                        ParentFrameID = parentFrame.ID,
+                        WaitingOperationID = result.WaitingOperationID,
+                    }
+                );
+            }
         }
 
         private int FindFrameIndexByID(in NativeList<EventFrame> eventFrames, uint frameID)
@@ -484,12 +550,10 @@ namespace Archeus.Battle.Systems.Events
                         EventEmissionContext emissionContext = new EventEmissionContext
                         {
                             StructuralData = frame.Event.StructuralData,
+                            ActionData = frame.Event.ActionData,
+                            ExecutionData = frame.Event.ExecutionData,
                             CurrentFrameID = frame.ID,
                         };
-
-                        // LogFrameResolution(
-                        //     in frame
-                        // );
 
                         BattleEventResolver.Resolve(frame.Event, ref ctx, in emissionContext);
 
@@ -567,6 +631,212 @@ namespace Archeus.Battle.Systems.Events
             }
 
             executionList.Dispose();
+        }
+
+        private bool HasPendingCausalOperationWork(
+            uint operationID,
+            in NativeList<EventFrame> eventFrames,
+            DynamicBuffer<ChainedBattleEvent> chainedEventQueue,
+            DynamicBuffer<BehaviourExecutionRequest> executionRequestQueue,
+            in NativeList<AbilityExecutionContinuation> continuations
+        )
+        {
+            if (operationID == EventExecutionData.InvalidOperationID)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < eventFrames.Length; i++)
+            {
+                EventFrame frame = eventFrames[i];
+
+                if (frame.Completed)
+                    continue;
+
+                if (frame.Event.ExecutionData.OperationID == operationID)
+                {
+                    return true;
+                }
+            }
+
+            for (int i = 0; i < continuations.Length; i++)
+            {
+                AbilityExecutionContinuation continuation = continuations[i];
+
+                uint parentOperationID = continuation.BaseEmissionContext.ExecutionData.OperationID;
+
+                if (parentOperationID == operationID)
+                {
+                    return true;
+                }
+            }
+
+            for (int i = 0; i < chainedEventQueue.Length; i++)
+            {
+                if (chainedEventQueue[i].Event.ExecutionData.OperationID == operationID)
+                {
+                    return true;
+                }
+            }
+
+            for (int i = 0; i < executionRequestQueue.Length; i++)
+            {
+                if (
+                    executionRequestQueue[i].EmissionContext.ExecutionData.OperationID
+                    == operationID
+                )
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool TryResumeReadyContinuation(
+            ref NativeList<AbilityExecutionContinuation> continuations,
+            ref NativeList<EventFrame> eventFrames,
+            DynamicBuffer<ChainedBattleEvent> chainedEventQueue,
+            DynamicBuffer<BehaviourExecutionRequest> executionRequestQueue,
+            ref BattleContext ctx
+        )
+        {
+            for (int i = continuations.Length - 1; i >= 0; i--)
+            {
+                AbilityExecutionContinuation continuation = continuations[i];
+
+                if (
+                    HasPendingCausalOperationWork(
+                        continuation.WaitingOperationID,
+                        in eventFrames,
+                        chainedEventQueue,
+                        executionRequestQueue,
+                        in continuations
+                    )
+                )
+                {
+                    continue;
+                }
+
+                int parentFrameIndex = FindFrameIndexByID(
+                    in eventFrames,
+                    continuation.ParentFrameID
+                );
+
+                if (parentFrameIndex < 0)
+                {
+                    Logging.Warn(
+                        LogCategory.Event,
+                        $"[Scheduler] VM continuation could not "
+                            + $"find parent Frame "
+                            + $"{continuation.ParentFrameID}."
+                    );
+
+                    continuations.RemoveAt(i);
+                    return true;
+                }
+
+                ref EventFrame parentFrame = ref eventFrames.ElementAt(parentFrameIndex);
+
+                Entity behaviourOwner = continuation.Frame.BehaviourOwner;
+
+                if (!behaviourStateLookup.HasBuffer(behaviourOwner))
+                {
+                    Logging.Warn(
+                        LogCategory.Event,
+                        "[Scheduler] Resuming VM is missing " + "BehaviourRuntimeState buffer."
+                    );
+
+                    UnblockVMContinuation(ref parentFrame);
+
+                    continuations.RemoveAt(i);
+
+                    return true;
+                }
+
+                DynamicBuffer<BehaviourRuntimeState> stateBuffer = behaviourStateLookup[
+                    behaviourOwner
+                ];
+
+                Logging.Info(
+                    LogCategory.Event,
+                    $"[VM RESUME] "
+                        + $"ParentFrame={continuation.ParentFrameID} | "
+                        + $"CompletedOperation={continuation.WaitingOperationID} | "
+                        + $"ResumeIP={continuation.Frame.InstructionPointer}"
+                );
+
+                AbilityExecutionResult result = BehaviourExecutor.Resume(
+                    ref continuation,
+                    ref parentFrame.Event,
+                    ref ctx,
+                    stateBuffer
+                );
+
+                if (result.Status == AbilityExecutionStatus.Yielded)
+                {
+                    Logging.Info(
+                        LogCategory.Event,
+                        $"[VM RE-YIELD] "
+                            + $"NewOperation={result.WaitingOperationID} | "
+                            + $"ResumeIP={continuation.Frame.InstructionPointer}"
+                    );
+
+                    continuation.WaitingOperationID = result.WaitingOperationID;
+
+                    continuations[i] = continuation;
+
+                    return true;
+                }
+                // Completed OR Aborted.
+                UnblockVMContinuation(ref parentFrame);
+
+                Logging.Info(
+                    LogCategory.Event,
+                    $"[VM COMPLETE] "
+                        + $"ParentFrame={continuation.ParentFrameID} | "
+                        + $"Program={continuation.Frame.ProgramIndex}"
+                );
+
+                continuations.RemoveAt(i);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool IsExecutionRequestBlocked(
+            in NativeList<EventFrame> eventFrames,
+            in BehaviourExecutionRequest request
+        )
+        {
+            int parentIndex = FindFrameIndexByID(
+                in eventFrames,
+                request.EmissionContext.CurrentFrameID
+            );
+
+            if (parentIndex < 0)
+                return false;
+
+            return eventFrames[parentIndex].PendingVMContinuations > 0;
+        }
+
+        private void UnblockVMContinuation(ref EventFrame parentFrame)
+        {
+            if (parentFrame.PendingVMContinuations == 0)
+            {
+                Logging.Warn(
+                    LogCategory.Event,
+                    $"[Scheduler] Frame {parentFrame.ID} "
+                        + "attempted to release a VM continuation "
+                        + "but none were registered."
+                );
+
+                return;
+            }
+
+            parentFrame.PendingVMContinuations--;
         }
 
         private uint RetrieveNextFrameID(RefRW<BattleEventFrameIDCounter> counter)

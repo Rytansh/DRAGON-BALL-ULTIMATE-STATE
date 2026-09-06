@@ -1,13 +1,12 @@
-using Unity.Entities;
-using Unity.Collections;
-
 using Archeus.Battle.Buffers.Events;
 using Archeus.Battle.Buffers.VM;
-using Archeus.Battle.Events.Context;
-using Archeus.Content.Registries;
-using Archeus.Content.Blobs;
-using Archeus.Battle.Data.Events;
 using Archeus.Battle.Components.Stats;
+using Archeus.Battle.Data.Events;
+using Archeus.Battle.Events.Context;
+using Archeus.Content.Blobs;
+using Archeus.Content.Registries;
+using Unity.Collections;
+using Unity.Entities;
 
 namespace Archeus.Battle.VM.Execution
 {
@@ -20,25 +19,25 @@ namespace Archeus.Battle.VM.Execution
             in BattleEvent evt,
             uint currentFrameID,
             BattleEventPhase phase,
-            ref NativeList<BehaviourExecutionRequest> results)
+            ref NativeList<BehaviourExecutionRequest> results
+        )
         {
-            if (evt.Scope == BattleEventScope.Targeted
+            if (
+                evt.Scope == BattleEventScope.Targeted
                 && entity != evt.Source
-                && entity != evt.Target)
+                && entity != evt.Target
+            )
             {
                 return;
             }
 
-            ref ContentBlobRegistry registry =
-                ref ctx.BattleRegistryReference.Value;
+            ref ContentBlobRegistry registry = ref ctx.BattleRegistryReference.Value;
 
             for (int i = 0; i < behaviours.Length; i++)
             {
-                int behaviourIndex =
-                    behaviours[i].BehaviourIndex;
+                int behaviourIndex = behaviours[i].BehaviourIndex;
 
-                ref BehaviourDefinitionBlob behaviour =
-                    ref registry.Behaviours[behaviourIndex];
+                ref BehaviourDefinitionBlob behaviour = ref registry.Behaviours[behaviourIndex];
 
                 CollectFromBehaviour(
                     entity,
@@ -63,36 +62,24 @@ namespace Archeus.Battle.VM.Execution
             in BattleEvent evt,
             uint currentFrameID,
             BattleEventPhase phase,
-            ref NativeList<BehaviourExecutionRequest> results)
+            ref NativeList<BehaviourExecutionRequest> results
+        )
         {
-            for (int triggerIndex = 0;
-                 triggerIndex < behaviour.Triggers.Length;
-                 triggerIndex++)
+            for (int triggerIndex = 0; triggerIndex < behaviour.Triggers.Length; triggerIndex++)
             {
-                ref BehaviourTriggerBlob trigger =
-                    ref behaviour.Triggers[triggerIndex];
+                ref BehaviourTriggerBlob trigger = ref behaviour.Triggers[triggerIndex];
 
-                if (!IsMatchingTrigger(
-                        ref trigger,
-                        in evt,
-                        phase))
+                if (!IsMatchingTrigger(ref trigger, in evt, phase))
                 {
                     continue;
                 }
 
-                if (!MatchesOwnerType(
-                        entity,
-                        trigger.OwnerType,
-                        in evt))
+                if (!MatchesOwnerType(entity, trigger.OwnerType, in evt))
                 {
                     continue;
                 }
 
-                if (!BehaviourConditionEvaluator.Evaluate(
-                        entity,
-                        evt,
-                        ref ctx,
-                        ref trigger))
+                if (!BehaviourConditionEvaluator.Evaluate(entity, evt, ref ctx, ref trigger))
                 {
                     continue;
                 }
@@ -105,8 +92,7 @@ namespace Archeus.Battle.VM.Execution
                     // causal generation.
                     case BattleEventPhase.PreResolution:
                     {
-                        executionGeneration =
-                            evt.StructuralData.Generation;
+                        executionGeneration = evt.StructuralData.Generation;
 
                         break;
                     }
@@ -115,12 +101,7 @@ namespace Archeus.Battle.VM.Execution
                     // execute in the next causal generation.
                     case BattleEventPhase.PostResolution:
                     {
-                        executionGeneration =
-                            checked(
-                                (ushort)(
-                                    evt.StructuralData.Generation + 1
-                                )
-                            );
+                        executionGeneration = checked((ushort)(evt.StructuralData.Generation + 1));
 
                         break;
                     }
@@ -133,55 +114,37 @@ namespace Archeus.Battle.VM.Execution
                     }
                 }
 
-                EventEmissionContext emissionContext =
-                    new EventEmissionContext
+                EventEmissionContext emissionContext = new EventEmissionContext
+                {
+                    StructuralData = new EventStructuralData
                     {
-                        StructuralData =
-                            new EventStructuralData
-                            {
-                                GroupID =
-                                    evt.StructuralData.GroupID,
-
-                                Generation =
-                                    executionGeneration,
-
-                                // The triggering EventFrame is
-                                // the causal parent of anything
-                                // emitted by this behaviour.
-                                ParentFrameID =
-                                    currentFrameID
-                            },
-
-                        CurrentFrameID =
-                            currentFrameID
-                    };
+                        GroupID = evt.StructuralData.GroupID,
+                        Generation = executionGeneration,
+                        ParentFrameID = currentFrameID,
+                    },
+                    ActionData = evt.ActionData,
+                    ExecutionData = evt.ExecutionData,
+                    CurrentFrameID = currentFrameID,
+                };
 
                 results.Add(
                     new BehaviourExecutionRequest
                     {
-                        BehaviourIndex =
-                            behaviourIndex,
+                        BehaviourIndex = behaviourIndex,
 
-                        TriggerIndex =
-                            triggerIndex,
+                        TriggerIndex = triggerIndex,
 
-                        Priority =
-                            trigger.Priority,
+                        Priority = trigger.Priority,
 
-                        RegistrationIndex =
-                            registrationIndex,
+                        RegistrationIndex = registrationIndex,
 
-                        Owner =
-                            entity,
+                        Owner = entity,
 
-                        Source =
-                            evt.Source,
+                        Source = evt.Source,
 
-                        Target =
-                            evt.Target,
+                        Target = evt.Target,
 
-                        EmissionContext =
-                            emissionContext
+                        EmissionContext = emissionContext,
                     }
                 );
             }
@@ -190,16 +153,17 @@ namespace Archeus.Battle.VM.Execution
         private static bool IsMatchingTrigger(
             ref BehaviourTriggerBlob trigger,
             in BattleEvent evt,
-            BattleEventPhase phase)
+            BattleEventPhase phase
+        )
         {
-            return trigger.EventType == evt.Type
-                && trigger.Phase == phase;
+            return trigger.EventType == evt.Type && trigger.Phase == phase;
         }
 
         private static bool MatchesOwnerType(
             Entity owner,
             TriggerOwnerType ownerType,
-            in BattleEvent evt)
+            in BattleEvent evt
+        )
         {
             switch (ownerType)
             {

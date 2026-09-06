@@ -76,8 +76,8 @@ namespace Archeus.Battle.Events.Resolvers
                 Generation = evt.StructuralData.Generation,
 
                 ActionDefinitionID = 0,
-                ActionInstanceID = 0,
-                ActionResultIndex = PresentationFactMetadata.NoActionResult,
+                ActionExecutionID = evt.ActionData.ActionExecutionID,
+                ActionResultIndex = evt.ActionData.ActionResultGroupIndex,
             };
 
             PresentationFactEmitter.EmitDamageAppliedFact(
@@ -107,8 +107,34 @@ namespace Archeus.Battle.Events.Resolvers
                 StructuralData = evt.StructuralData,
             };
 
+            BattleEvent damageReceivedEvent = new BattleEvent
+            {
+                Type = BattleEventType.DamageReceived,
+                Scope = evt.Scope,
+                Source = evt.Source,
+                Target = target,
+                Payload = new EventPayload
+                {
+                    Damage = new DamagePayload
+                    {
+                        AttackMultiplier = evt.Payload.Damage.AttackMultiplier,
+                        BaseDamage = evt.Payload.Damage.BaseDamage,
+                        FinalDamage = evt.Payload.Damage.FinalDamage,
+                        DidCrit = evt.Payload.Damage.DidCrit,
+                        CritMultiplier = evt.Payload.Damage.CritMultiplier,
+                    },
+                },
+                StructuralData = evt.StructuralData,
+            };
+
             BattleEventEmitter.EmitContinuationEvent(
                 damageAppliedEvent,
+                ref ctx.ChainedEventQueue,
+                in emissionContext
+            );
+
+            BattleEventEmitter.EmitContinuationEvent(
+                damageReceivedEvent,
                 ref ctx.ChainedEventQueue,
                 in emissionContext
             );

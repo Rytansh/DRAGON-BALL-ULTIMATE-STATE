@@ -29,6 +29,7 @@ namespace Archeus.Game.Bootstrap
             sharedOrchestrator.Register(new SeedGenProcess());
             sharedOrchestrator.Register(new RNGTestProcess());
             sharedOrchestrator.Register(new EventBusProcess());
+            sharedOrchestrator.Register(new BattlePresentationBridgeProcess());
 
             // Simulation services
             simulationOrchestrator.Register(new BattleSimulationWorldProcess());

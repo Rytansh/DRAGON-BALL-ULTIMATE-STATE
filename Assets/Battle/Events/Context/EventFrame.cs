@@ -9,6 +9,7 @@ namespace Archeus.Battle.Events.Context
         public BattleEvent Event;
         public BattleEventPhase Phase;
         public bool PhaseStarted;
+        public ushort PendingVMContinuations;
         public bool Completed;
     }
 }

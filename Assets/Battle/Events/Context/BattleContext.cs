@@ -1,3 +1,4 @@
+using Archeus.Battle.Buffers.Actions;
 using Archeus.Battle.Buffers.Combat;
 using Archeus.Battle.Buffers.Events;
 using Archeus.Battle.Buffers.Presentation;
@@ -18,6 +19,8 @@ namespace Archeus.Battle.Events.Context
         // Battle-owned event resources
         public DynamicBuffer<ChainedBattleEvent> ChainedEventQueue;
         public DynamicBuffer<BattleParticipant> Participants;
+        public DynamicBuffer<ActionExecutionState> ActionExecutionStates;
+        public RefRW<BattleOperationIDCounter> OperationCounter;
 
         // Battle-owned presentation resources
         public DynamicBuffer<PresentationFact> PresentationFactQueue;

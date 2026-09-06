@@ -35,6 +35,8 @@ namespace Archeus.Battle.Events.Factory
                 Generation = context.StructuralData.Generation,
                 ParentFrameID = context.CurrentFrameID,
             };
+            evt.ActionData = context.ActionData;
+            evt.ExecutionData = context.ExecutionData;
 
             queue.Add(new ChainedBattleEvent { Event = evt });
         }
@@ -51,6 +53,8 @@ namespace Archeus.Battle.Events.Factory
                 Generation = checked((ushort)(context.StructuralData.Generation + 1)),
                 ParentFrameID = context.CurrentFrameID,
             };
+            evt.ActionData = context.ActionData;
+            evt.ExecutionData = context.ExecutionData;
 
             queue.Add(new ChainedBattleEvent { Event = evt });
         }

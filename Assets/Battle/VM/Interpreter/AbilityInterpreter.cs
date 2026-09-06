@@ -2,8 +2,10 @@ using Archeus.Battle.Buffers.Events;
 using Archeus.Battle.Components.Ownership;
 using Archeus.Battle.Data.Events;
 using Archeus.Battle.Data.VM;
+using Archeus.Battle.Events.Context;
 using Archeus.Battle.Events.Factory;
 using Archeus.Battle.Events.Payloads;
+using Archeus.Battle.Runtime;
 using Archeus.Core.Debugging;
 using Unity.Collections;
 using Unity.Entities;
@@ -14,25 +16,32 @@ namespace Archeus.Battle.VM.Execution
     {
         private const int MAX_VM_STEPS = 256;
 
-        public static void Execute(
+        public static AbilityExecutionResult Execute(
             ref AbilityExecutionFrame frame,
             ref AbilityExecutionContext context,
             ref BattleEvent evt
         )
         {
-            int safetyCounter = 0;
             ref var program = ref context.ContentRegistry.Value.AbilityPrograms[frame.ProgramIndex];
-            FixedList512Bytes<Entity> targets = new FixedList512Bytes<Entity> { frame.Target };
 
             while (frame.InstructionPointer < program.Instructions.Length)
             {
-                if (++safetyCounter > MAX_VM_STEPS)
+                if (++frame.StepsExecuted > MAX_VM_STEPS)
                 {
-                    Logging.Info(LogCategory.VM, "VM exceeded maximum instruction count.");
-                    return;
+                    Logging.Warn(LogCategory.VM, "VM exceeded maximum instruction count.");
+
+                    return AbilityExecutionResult.Aborted;
                 }
 
                 ref var instruction = ref program.Instructions[frame.InstructionPointer];
+
+                bool beganGameplayOperation = AbilityInterpreterTooling.TryBeginGameplayOperation(
+                    instruction.Opcode,
+                    ref frame,
+                    ref context,
+                    out EventEmissionContext instructionEmissionContext,
+                    out uint operationID
+                );
 
                 switch (instruction.Opcode)
                 {
@@ -130,7 +139,7 @@ namespace Archeus.Battle.VM.Execution
                     {
                         TargetSelectionType type = (TargetSelectionType)instruction.A;
 
-                        SelectTargets(ref targets, ref frame, ref context, type);
+                        AbilityInterpreterTooling.SelectTargets(ref frame, ref context, type);
 
                         break;
                     }
@@ -226,7 +235,7 @@ namespace Archeus.Battle.VM.Execution
                     {
                         float multiplier = Pop(ref frame);
 
-                        foreach (Entity target in targets)
+                        foreach (Entity target in frame.Targets)
                         {
                             BattleEventEmitter.EmitContinuationEvent(
                                 new BattleEvent
@@ -235,6 +244,7 @@ namespace Archeus.Battle.VM.Execution
                                     Scope = BattleEventScope.Targeted,
                                     Source = frame.Source,
                                     Target = target,
+
                                     Payload = new EventPayload
                                     {
                                         Damage = new DamagePayload
@@ -244,9 +254,10 @@ namespace Archeus.Battle.VM.Execution
                                     },
                                 },
                                 ref context.ChainedEventQueue,
-                                in context.EmissionContext
+                                in instructionEmissionContext
                             );
                         }
+
                         break;
                     }
 
@@ -264,7 +275,7 @@ namespace Archeus.Battle.VM.Execution
                             isPermanent = true;
                         }
 
-                        foreach (Entity target in targets)
+                        foreach (Entity target in frame.Targets)
                         {
                             BattleEventEmitter.EmitContinuationEvent(
                                 new BattleEvent
@@ -285,9 +296,44 @@ namespace Archeus.Battle.VM.Execution
                                     },
                                 },
                                 ref context.ChainedEventQueue,
-                                in context.EmissionContext
+                                in instructionEmissionContext
                             );
                         }
+                        break;
+                    }
+
+                    case AbilityOpcode.CheckTargetHP:
+                    {
+                        foreach (Entity target in frame.Targets)
+                        {
+                            if (target == Entity.Null)
+                            {
+                                Logging.Warn(
+                                    LogCategory.Combat,
+                                    "[CheckTargetHP] Target is Entity.Null."
+                                );
+
+                                break;
+                            }
+
+                            if (!context.CurrentHealthLookup.HasComponent(target))
+                            {
+                                Logging.Warn(
+                                    LogCategory.Combat,
+                                    $"[CheckTargetHP] Entity {target.Index} has no CurrentHealth component."
+                                );
+
+                                break;
+                            }
+
+                            float currentHP = context.CurrentHealthLookup[target].Value;
+
+                            Logging.Info(
+                                LogCategory.Combat,
+                                $"[CheckTargetHP] Entity={target.Index} | CurrentHP={currentHP}"
+                            );
+                        }
+
                         break;
                     }
 
@@ -324,7 +370,7 @@ namespace Archeus.Battle.VM.Execution
 
                     case AbilityOpcode.End:
                     {
-                        return;
+                        return AbilityExecutionResult.Completed;
                     }
 
                     // DEFAULT
@@ -334,12 +380,27 @@ namespace Archeus.Battle.VM.Execution
                             LogCategory.VM,
                             $"Unknown opcode {instruction.Opcode}. Cancelling execution."
                         );
-                        return;
+
+                        return AbilityExecutionResult.Aborted;
                     }
                 }
 
                 frame.InstructionPointer++;
+
+                if (beganGameplayOperation)
+                {
+                    Logging.Info(
+                        LogCategory.VM,
+                        $"[VM YIELD] "
+                            + $"Program={frame.ProgramIndex} | "
+                            + $"ResumeIP={frame.InstructionPointer} | "
+                            + $"Operation={operationID}"
+                    );
+
+                    return AbilityExecutionResult.Yielded(operationID);
+                }
             }
+            return AbilityExecutionResult.Completed;
         }
 
         private static void Push(ref AbilityExecutionFrame frame, float value)
@@ -376,96 +437,6 @@ namespace Archeus.Battle.VM.Execution
             }
 
             return frame.Stack[frame.Stack.Length - 1];
-        }
-
-        private static void SelectTargets(
-            ref FixedList512Bytes<Entity> targets,
-            ref AbilityExecutionFrame frame,
-            ref AbilityExecutionContext context,
-            TargetSelectionType type
-        )
-        {
-            targets.Clear();
-
-            switch (type)
-            {
-                case TargetSelectionType.PrimaryTarget:
-                {
-                    if (frame.Target != Entity.Null)
-                        targets.Add(frame.Target);
-
-                    break;
-                }
-
-                case TargetSelectionType.Self:
-                {
-                    if (frame.BehaviourOwner != Entity.Null)
-                        targets.Add(frame.BehaviourOwner);
-
-                    break;
-                }
-
-                case TargetSelectionType.AllEnemies:
-                {
-                    SelectTeamTargets(ref targets, ref frame, ref context, selectSameTeam: false);
-
-                    break;
-                }
-
-                case TargetSelectionType.AllAllies:
-                {
-                    SelectTeamTargets(ref targets, ref frame, ref context, selectSameTeam: true);
-
-                    break;
-                }
-            }
-        }
-
-        private static void SelectTeamTargets(
-            ref FixedList512Bytes<Entity> targets,
-            ref AbilityExecutionFrame frame,
-            ref AbilityExecutionContext context,
-            bool selectSameTeam
-        )
-        {
-            Entity referenceEntity = frame.BehaviourOwner;
-
-            if (!context.TeamLookup.HasComponent(referenceEntity))
-                return;
-
-            BattleSide referenceSide = context.TeamLookup[referenceEntity].Side;
-
-            for (int i = 0; i < context.BattleParticipants.Length; i++)
-            {
-                Entity candidate = context.BattleParticipants[i].Participant;
-
-                // Participant must currently have a Team.
-                if (!context.TeamLookup.HasComponent(candidate))
-                    continue;
-
-                // For our current architecture, HP > 0 means alive/targetable.
-                if (!context.CurrentHealthLookup.HasComponent(candidate))
-                    continue;
-
-                if (context.CurrentHealthLookup[candidate].Value <= 0f)
-                    continue;
-
-                BattleSide candidateSide = context.TeamLookup[candidate].Side;
-
-                bool sameTeam = candidateSide == referenceSide;
-
-                if (sameTeam != selectSameTeam)
-                    continue;
-
-                if (targets.Length >= targets.Capacity)
-                {
-                    Logging.Warn(LogCategory.VM, "VM target collection exceeded capacity.");
-
-                    return;
-                }
-
-                targets.Add(candidate);
-            }
         }
     }
 }

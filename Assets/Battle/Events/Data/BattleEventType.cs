@@ -3,6 +3,7 @@ namespace Archeus.Battle.Data.Events
     public enum BattleEventType : ushort
     {
         TestEvent,
+
         //(Turn Related Events)
         TurnStarted,
         TurnEnded,
@@ -24,6 +25,7 @@ namespace Archeus.Battle.Data.Events
         DamageMitigated,
         DamageResolved,
         DamageApplied,
+        DamageReceived,
 
         //(Effect Related Events)
 
@@ -35,20 +37,20 @@ namespace Archeus.Battle.Data.Events
 
         //(Status Related Events)
         EntityKilled,
-        ReactionTriggered
+        ReactionTriggered,
     }
 
     public enum BattleEventPhase
     {
         PreResolution,
         Resolution,
-        PostResolution
+        PostResolution,
     }
+
     public enum EventValueType
     {
         DamageBase,
         DamageFinal,
-        DamageMultiplier
+        DamageMultiplier,
     }
-
 }

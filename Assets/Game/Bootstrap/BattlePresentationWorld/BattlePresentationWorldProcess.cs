@@ -1,19 +1,49 @@
+using System;
+using Archeus.Battle.Systems.Presentation;
 using Archeus.Core.Debugging;
+using Unity.Entities;
 
 namespace Archeus.Game.Bootstrap
 {
-    public class BattlePresentationWorldProcess : IBootstrapProcess
+    public sealed class BattlePresentationWorldProcess : IBootstrapProcess
     {
-        public int Order => PresentationBootstrapOrder.PresentationWorld;
+        public int Order => PresentationBootstrapOrder.BattlePresentationWorld;
 
         public void Initialise(WorldContext rootContext)
         {
-            BattlePresentationWorld presentationWorld = new BattlePresentationWorld(rootContext);
-            presentationWorld.Initialise();
+            World ecsWorld = new World("Battle Presentation", WorldFlags.Simulation);
 
-            rootContext.Register<BattlePresentationWorld>(presentationWorld);
+            Type[] presentationSystems =
+            {
+                typeof(BattlePresentationProbeSystem),
+                typeof(PresentationFactImportSystem),
+            };
 
-            Logging.Info(LogCategory.Setup, "Presentation world initialised.");
+            DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(
+                ecsWorld,
+                presentationSystems
+            );
+
+            ScriptBehaviourUpdateOrder.AppendWorldToCurrentPlayerLoop(ecsWorld);
+
+            BattlePresentationWorld presentationWorld = new BattlePresentationWorld(ecsWorld);
+
+            rootContext.Register(presentationWorld);
+
+            // Create reference to the presentation bridge
+            BattlePresentationBridge bridge = rootContext.Resolve<BattlePresentationBridge>();
+            EntityManager entityManager = presentationWorld.EcsWorld.EntityManager;
+            Entity bridgeEntity = entityManager.CreateEntity();
+            entityManager.SetName(bridgeEntity, "Battle Presentation Bridge Reference");
+            entityManager.AddComponentObject(
+                bridgeEntity,
+                new BattlePresentationBridgeReference { Bridge = bridge }
+            );
+
+            Logging.Info(
+                LogCategory.Setup,
+                $"Battle Presentation created using ECS World: {ecsWorld.Name}"
+            );
         }
     }
 }

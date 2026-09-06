@@ -9,7 +9,7 @@ namespace Archeus.Game.Bootstrap
     {
         public void OnUpdate(ref SystemState state)
         {
-            Logging.Info(LogCategory.System, "Archeus Simulation World is updating.");
+            Logging.Info(LogCategory.System, "Battle simulation updating...");
 
             state.Enabled = false;
         }

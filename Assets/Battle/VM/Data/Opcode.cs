@@ -6,7 +6,7 @@ namespace Archeus.Battle.Data.VM
         PushStat,
         PushEventValue,
         LoadState,
-        
+
         StoreState,
         ModifyEventValue,
         SelectTarget,
@@ -24,11 +24,11 @@ namespace Archeus.Battle.Data.VM
 
         DealDamage,
         ApplyEffect,
+        CheckTargetHP,
 
         Jump,
         JumpIfFalse,
         JumpIfTrue,
-        End
+        End,
     }
 }
-

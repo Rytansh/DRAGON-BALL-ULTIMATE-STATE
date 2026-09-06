@@ -1,3 +1,4 @@
+using Archeus.Battle.Buffers.Actions;
 using Archeus.Battle.Buffers.Events;
 using Archeus.Battle.Components.Combat;
 using Archeus.Battle.Components.Core;
@@ -5,6 +6,7 @@ using Archeus.Battle.Components.Ownership;
 using Archeus.Battle.Components.Requests;
 using Archeus.Battle.Components.Tags;
 using Archeus.Battle.Components.Turns;
+using Archeus.Battle.Data.Actions;
 using Archeus.Battle.Data.Events;
 using Archeus.Battle.Events.Factory;
 using Archeus.Battle.Events.Payloads;
@@ -72,24 +74,16 @@ namespace Archeus.Battle.Systems.Turnflow
                     continue;
                 }
 
-                var eventBuffer = SystemAPI.GetBuffer<BattleEvent>(battle);
-                RefRW<BattleEventGroupIDCounter> groupCounter =
-                    SystemAPI.GetComponentRW<BattleEventGroupIDCounter>(battle);
+                DynamicBuffer<ActionExecutionRequest> actionRequests =
+                    SystemAPI.GetBuffer<ActionExecutionRequest>(battle);
 
-                BattleEventEmitter.EmitOriginEvent(
-                    new BattleEvent
+                actionRequests.Add(
+                    new ActionExecutionRequest
                     {
-                        Type = BattleEventType.TestEvent,
-                        Scope = BattleEventScope.Targeted,
                         Source = selectedCharacter.Value,
-                        Target = selectedTarget.Value,
-                        Payload = new EventPayload
-                        {
-                            Damage = new DamagePayload { AttackMultiplier = 1.0f },
-                        },
-                    },
-                    ref eventBuffer,
-                    groupCounter
+                        PrimaryTarget = selectedTarget.Value,
+                        CharacterAction = CharacterActionType.NormalAttack,
+                    }
                 );
 
                 ecb.DestroyEntity(requestEntity);

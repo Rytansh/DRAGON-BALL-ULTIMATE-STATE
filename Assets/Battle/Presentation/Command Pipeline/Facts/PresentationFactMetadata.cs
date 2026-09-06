@@ -13,7 +13,7 @@ namespace Archeus.Battle.Presentation.Facts
         public ulong Sequence;
 
         public uint ActionDefinitionID;
-        public uint ActionInstanceID;
+        public uint ActionExecutionID;
         public ushort ActionResultIndex;
 
         public uint GroupID;
@@ -26,7 +26,7 @@ namespace Archeus.Battle.Presentation.Facts
         public uint SourceRuntimeID;
         public uint TargetRuntimeID;
         public uint ActionDefinitionID;
-        public uint ActionInstanceID;
+        public uint ActionExecutionID;
         public ushort ActionResultIndex;
         public uint GroupID;
         public ushort Generation;

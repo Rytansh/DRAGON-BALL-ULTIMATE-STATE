@@ -1,3 +1,4 @@
+using Archeus.Battle.Buffers.Actions;
 using Archeus.Battle.Buffers.Combat;
 using Archeus.Battle.Buffers.Events;
 using Archeus.Battle.Buffers.Presentation;
@@ -13,7 +14,6 @@ using Archeus.Core.Debugging;
 using Archeus.Game.Bootstrap;
 using Unity.Collections;
 using Unity.Entities;
-using UnityEngine.UIElements.Experimental;
 
 namespace Archeus.Battle.Systems.Setup
 {
@@ -73,6 +73,8 @@ namespace Archeus.Battle.Systems.Setup
             ecb.AddComponent(battle, new BattleRuntimeIDCounter { NextID = 100 });
             ecb.AddComponent(battle, new BattleEventFrameIDCounter { NextID = 1 });
             ecb.AddComponent(battle, new BattleEventGroupIDCounter { NextID = 1 });
+            ecb.AddComponent(battle, new BattleActionExecutionCounter { NextID = 1 });
+            ecb.AddComponent(battle, new BattleOperationIDCounter { NextID = 1 });
             ecb.AddComponent(
                 battle,
                 new BattleContentRegistry
@@ -88,6 +90,8 @@ namespace Archeus.Battle.Systems.Setup
             ecb.AddBuffer<BattleEvent>(battle);
             ecb.AddBuffer<ChainedBattleEvent>(battle);
             ecb.AddBuffer<BehaviourExecutionRequest>(battle);
+            ecb.AddBuffer<ActionExecutionRequest>(battle);
+            ecb.AddBuffer<ActionExecutionState>(battle);
 
             // PRESENTATION RELATED COMPONENTS / BUFFERS
             ecb.AddComponent(battle, new PresentationSequenceCounter { NextSequence = 1 });

@@ -52,7 +52,7 @@ namespace Archeus.Battle.Presentation.Factory
                 Sequence = RetrieveNextSequence(sequenceCounter),
 
                 ActionDefinitionID = context.ActionDefinitionID,
-                ActionInstanceID = context.ActionInstanceID,
+                ActionExecutionID = context.ActionExecutionID,
                 ActionResultIndex = context.ActionResultIndex,
 
                 GroupID = context.GroupID,
@@ -85,8 +85,8 @@ namespace Archeus.Battle.Presentation.Factory
                             : metadata.ActionResultIndex.ToString();
 
                     Logging.Info(
-                        LogCategory.Presentation,
-                        $"[PRESENTATION FACT] "
+                        LogCategory.Simulation,
+                        $"Created presentation fact: "
                             + $"Seq={metadata.Sequence} | "
                             + $"Type={fact.FactType} | "
                             + $"Battle={metadata.BattleRuntimeID} | "
@@ -94,7 +94,7 @@ namespace Archeus.Battle.Presentation.Factory
                             + $"Target={metadata.TargetRuntimeID} | "
                             + $"Group={metadata.GroupID} | "
                             + $"Gen={metadata.Generation} | "
-                            + $"Action={metadata.ActionInstanceID} | "
+                            + $"Action={metadata.ActionExecutionID} | "
                             + $"Result={actionResult} | "
                             + $"Damage={hit.Damage} | "
                             + $"Crit={hit.IsCrit}"
@@ -106,8 +106,8 @@ namespace Archeus.Battle.Presentation.Factory
                 default:
                 {
                     Logging.Info(
-                        LogCategory.Presentation,
-                        $"[PRESENTATION FACT] "
+                        LogCategory.Simulation,
+                        $"Created presentation fact: "
                             + $"Seq={metadata.Sequence} | "
                             + $"Type={fact.FactType} | "
                             + $"Battle={metadata.BattleRuntimeID} | "

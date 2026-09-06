@@ -1,31 +1,20 @@
-using Archeus.Core.Debugging;
+using Archeus.Battle.Buffers.Presentation;
+using Unity.Entities;
 
 namespace Archeus.Game.Bootstrap
 {
     public sealed class BattlePresentationWorld
     {
-        public WorldContext localContext { get; private set; }
-        private readonly WorldContext rootContext;
+        public World EcsWorld { get; }
 
-        public BattlePresentationWorld(WorldContext rootContext)
+        public BattlePresentationWorld(World ecsWorld)
         {
-            this.rootContext = rootContext;
-        }
-
-        public void Initialise()
-        {
-            localContext = new WorldContext();
-
-            IConfigProvider rootConfigProvider = rootContext.Resolve<IConfigProvider>();
-            localContext.Register<IConfigProvider>(rootConfigProvider);
-
-            Logging.Info(LogCategory.Setup, "PresentationWorld context created.");
-        }
-
-        public void Dispose()
-        {
-            // cleanup logic later
-            Logging.Info(LogCategory.Setup, "PresentationWorld disposed.");
+            EcsWorld = ecsWorld;
+            // Create inbox system
+            EntityManager em = ecsWorld.EntityManager;
+            Entity inbox = em.CreateEntity(typeof(BattlePresentationInboxTag));
+            em.SetName(inbox, "Presentation Fact Inbox");
+            em.AddBuffer<PresentationFact>(inbox);
         }
     }
 }

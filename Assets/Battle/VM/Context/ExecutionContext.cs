@@ -1,10 +1,12 @@
-using Unity.Entities;
-using Archeus.Battle.Components.Stats;
-using Archeus.Battle.Buffers.Events;
-using Archeus.Content.Registries;
-using Archeus.Battle.Events.Context;
-using Archeus.Battle.Components.Ownership;
+using Archeus.Battle.Buffers.Actions;
 using Archeus.Battle.Buffers.Combat;
+using Archeus.Battle.Buffers.Events;
+using Archeus.Battle.Components.Core;
+using Archeus.Battle.Components.Ownership;
+using Archeus.Battle.Components.Stats;
+using Archeus.Battle.Events.Context;
+using Archeus.Content.Registries;
+using Unity.Entities;
 
 namespace Archeus.Battle.VM.Execution
 {
@@ -12,6 +14,8 @@ namespace Archeus.Battle.VM.Execution
     {
         public DynamicBuffer<ChainedBattleEvent> ChainedEventQueue;
         public ComponentLookup<CharacterStats> CharacterStatsLookup;
+        public DynamicBuffer<ActionExecutionState> ActionExecutionStates;
+        public RefRW<BattleOperationIDCounter> OperationCounter;
 
         public DynamicBuffer<BattleParticipant> BattleParticipants;
         public ComponentLookup<Team> TeamLookup;

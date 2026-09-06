@@ -1,4 +1,5 @@
 using System;
+using Archeus.Battle.Systems.Actions;
 using Archeus.Battle.Systems.Cards;
 using Archeus.Battle.Systems.Effects;
 using Archeus.Battle.Systems.Events;
@@ -69,6 +70,9 @@ namespace Archeus.Game.Bootstrap
                 typeof(TargetSelectionSystem),
                 typeof(BattleEventProcessingSystem),
                 typeof(EffectDurationProcessingSystem),
+                typeof(ActionExecutionSystem),
+                // Presentation
+                typeof(PresentationFactExportSystem),
             };
 
             DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(

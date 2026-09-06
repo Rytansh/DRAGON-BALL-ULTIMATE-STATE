@@ -5,7 +5,7 @@ namespace Archeus.Game.Bootstrap
 {
     public sealed class BattleSimulationWorldProcess : IBootstrapProcess
     {
-        public int Order => SimulationBootstrapOrder.SimulationWorld;
+        public int Order => SimulationBootstrapOrder.BattleSimulationWorld;
 
         public void Initialise(WorldContext rootContext)
         {
@@ -21,6 +21,16 @@ namespace Archeus.Game.Bootstrap
             BattleSimulationWorld simulationWorld = new BattleSimulationWorld(ecsWorld);
 
             rootContext.Register(simulationWorld);
+
+            // Create reference to the presentation bridge
+            BattlePresentationBridge bridge = rootContext.Resolve<BattlePresentationBridge>();
+            EntityManager entityManager = simulationWorld.EcsWorld.EntityManager;
+            Entity bridgeEntity = entityManager.CreateEntity();
+            entityManager.SetName(bridgeEntity, "Battle Presentation Bridge Reference");
+            entityManager.AddComponentObject(
+                bridgeEntity,
+                new BattlePresentationBridgeReference { Bridge = bridge }
+            );
 
             Logging.Info(
                 LogCategory.Setup,
